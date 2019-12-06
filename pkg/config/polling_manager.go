@@ -186,8 +186,7 @@ func NewPollingProjectConfigManager(sdkKey string, pollingMangerOptions ...Optio
 		opt(&pollingProjectConfigManager)
 	}
 
-	initDatafile := pollingProjectConfigManager.initDatafile
-	pollingProjectConfigManager.ValidateAndUpdateDatafile(initDatafile)
+	pollingProjectConfigManager.ValidateAndUpdateDatafile(pollingProjectConfigManager.initDatafile)
 	if pollingProjectConfigManager.startByDefault {
 		pollingProjectConfigManager.SyncConfig() // initial poll
 	}
