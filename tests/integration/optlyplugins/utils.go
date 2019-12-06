@@ -67,8 +67,6 @@ func CreatePollingConfigManager(options models.APIOptions) *TestProjectConfigMan
 		configManager.OnProjectConfigUpdate(callback)
 	}
 	testProjectConfigManagerInstance.ProjectConfigManager = configManager
-	// Since we are using TestProjectConfigManager over ProjectConfigManager, factory will
-	// not call the start method for ProjectConfigManager, so we have to do it manually
 	exeCtx := utils.NewCancelableExecutionCtx()
 	configManager.Start(exeCtx)
 	// Verify datafile configuration tests
