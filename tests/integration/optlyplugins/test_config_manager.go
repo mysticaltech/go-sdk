@@ -17,7 +17,6 @@
 package optlyplugins
 
 import (
-	"sync"
 	"time"
 
 	"github.com/optimizely/go-sdk/pkg"
@@ -26,7 +25,7 @@ import (
 )
 
 // DefaultInitializationTimeout defines default timeout for datafile sync
-const DefaultInitializationTimeout = time.Duration(3000) * time.Millisecond
+const DefaultInitializationTimeout = time.Duration(4000) * time.Millisecond
 
 // TestProjectConfigManager represents a ProjectConfigManager with custom implementations
 type TestProjectConfigManager struct {
@@ -58,55 +57,47 @@ func (c *TestProjectConfigManager) TestConfiguration(configuration models.DataFi
 		timeout = time.Duration(*(configuration.Timeout)) * time.Millisecond
 	}
 
-	verify := func(wg *sync.WaitGroup) {
-		start := time.Now()
-		switch configuration.Mode {
-		case "wait_for_on_ready":
-			for {
-				t := time.Now()
-				elapsed := t.Sub(start)
-				if elapsed >= timeout {
-					break
-				}
-				// Check if projectconfig is ready
-				_, err := c.GetConfig()
-				if err == nil {
-					break
-				}
+	start := time.Now()
+	switch configuration.Mode {
+	case "wait_for_on_ready":
+		for {
+			t := time.Now()
+			elapsed := t.Sub(start)
+			if elapsed >= timeout {
+				break
 			}
-			break
-		case "wait_for_config_update":
-			revision := 0
-			if configuration.Revision != nil {
-				revision = *(configuration.Revision)
+			// Check if projectconfig is ready
+			config, _ := c.GetConfig()
+			if config != nil {
+				break
 			}
-			for {
-				t := time.Now()
-				elapsed := t.Sub(start)
-				if elapsed >= timeout {
-					break
-				}
-				if revision > 0 {
-					// This means we want the manager to poll until we get to a specific revision
-					if revision == len(c.listenersCalled) {
-						break
-					}
-				} else if len(c.listenersCalled) == 1 {
-					// For cases where we are just waiting for config listener
-					break
-				}
-			}
-			break
-		default:
-			break
 		}
-		wg.Done()
+		break
+	case "wait_for_config_update":
+		revision := 0
+		if configuration.Revision != nil {
+			revision = *(configuration.Revision)
+		}
+		for {
+			t := time.Now()
+			elapsed := t.Sub(start)
+			if elapsed >= timeout {
+				break
+			}
+			if revision > 0 {
+				// This means we want the manager to poll until we get to a specific revision
+				if revision == len(c.listenersCalled) {
+					break
+				}
+			} else if len(c.listenersCalled) == 1 {
+				// For cases where we are just waiting for config listener
+				break
+			}
+		}
+		break
+	default:
+		break
 	}
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go verify(&wg)
-	wg.Wait()
 }
 
 // GetListenersCalled - Returns listeners called

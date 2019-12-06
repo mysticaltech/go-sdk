@@ -56,15 +56,16 @@ func CreatePollingConfigManager(options models.APIOptions) *TestProjectConfigMan
 	pollingConfigManagerOptions = append(pollingConfigManagerOptions, config.WithPollingInterval(pollingTimeInterval))
 	sdkKey := GetSDKKey(options.DFMConfiguration)
 	urlString := localDatafileURLTemplate + options.ScenarioID
-	pollingConfigManagerOptions = append(pollingConfigManagerOptions, config.WithDatafileURLTemplate(urlString))
-
+	pollingConfigManagerOptions = append(pollingConfigManagerOptions, config.WithDatafileURLTemplate(urlString), config.WithStartByDefault(false))
 	testProjectConfigManagerInstance := &TestProjectConfigManager{}
-	pollingConfigManagerOptions = append(pollingConfigManagerOptions, config.WithNotificationHandlers(testProjectConfigManagerInstance.GetListenerCallbacks(options)...))
 
 	configManager := config.NewPollingProjectConfigManager(
 		sdkKey,
 		pollingConfigManagerOptions...,
 	)
+	for _, callback := range testProjectConfigManagerInstance.GetListenerCallbacks(options) {
+		configManager.OnProjectConfigUpdate(callback)
+	}
 	testProjectConfigManagerInstance.ProjectConfigManager = configManager
 	// Since we are using TestProjectConfigManager over ProjectConfigManager, factory will
 	// not call the start method for ProjectConfigManager, so we have to do it manually

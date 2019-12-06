@@ -98,7 +98,7 @@ func TestNewPollingProjectConfigManagerWithSimilarDatafileRevisions(t *testing.T
 	assert.NotNil(t, actual)
 	assert.Equal(t, projectConfig1, actual)
 
-	configManager.SyncConfig(mockDatafile2)
+	configManager.ValidateAndUpdateDatafile(mockDatafile2)
 	actual, err = configManager.GetConfig()
 	assert.Equal(t, projectConfig1, actual)
 }
@@ -127,7 +127,7 @@ func TestNewPollingProjectConfigManagerWithLastModifiedDates(t *testing.T) {
 	assert.Equal(t, projectConfig1, actual)
 
 	// Sync and check no changes were made to the previous config because of 304 error code
-	configManager.SyncConfig([]byte{})
+	configManager.SyncConfig()
 	actual, err = configManager.GetConfig()
 	assert.Nil(t, err)
 	assert.NotNil(t, actual)
@@ -156,7 +156,7 @@ func TestNewPollingProjectConfigManagerWithDifferentDatafileRevisions(t *testing
 	assert.NotNil(t, actual)
 	assert.Equal(t, projectConfig1, actual)
 
-	configManager.SyncConfig(mockDatafile2)
+	configManager.ValidateAndUpdateDatafile(mockDatafile2)
 	actual, err = configManager.GetConfig()
 	assert.Equal(t, projectConfig2, actual)
 }
@@ -183,12 +183,12 @@ func TestNewPollingProjectConfigManagerWithErrorHandling(t *testing.T) {
 	assert.Nil(t, actual)
 	assert.Nil(t, projectConfig1)
 
-	configManager.SyncConfig(mockDatafile2) // polling for good file
+	configManager.ValidateAndUpdateDatafile(mockDatafile2) // polling for good file
 	actual, err = configManager.GetConfig()
 	assert.Nil(t, err)
 	assert.Equal(t, projectConfig2, actual)
 
-	configManager.SyncConfig(mockDatafile1) // polling for bad file, error not null but good project
+	configManager.ValidateAndUpdateDatafile(mockDatafile1) // polling for bad file, error not null but good project
 	actual, err = configManager.GetConfig()
 	assert.Nil(t, err)
 	assert.Equal(t, projectConfig2, actual)
@@ -199,13 +199,13 @@ func TestNewPollingProjectConfigManagerOnDecision(t *testing.T) {
 	mockDatafile2 := []byte(`{"revision":"43","botFiltering":false}`)
 
 	mockRequester := new(MockRequester)
-	mockRequester.On("Get", []utils.Header(nil)).Return(mockDatafile1, http.Header{}, http.StatusOK, nil)
+	mockRequester.On("Get", []utils.Header(nil)).Return(mockDatafile2, http.Header{}, http.StatusOK, nil)
 
 	// Test we fetch using requester
 	sdkKey := "test_sdk_key"
 
 	exeCtx := utils.NewCancelableExecutionCtx()
-	configManager := NewPollingProjectConfigManager(sdkKey, WithRequester(mockRequester))
+	configManager := NewPollingProjectConfigManager(sdkKey, WithInitialDatafile(mockDatafile1), WithRequester(mockRequester), WithStartByDefault(false))
 	configManager.Start(exeCtx)
 
 	var numberOfCalls = 0
@@ -213,22 +213,19 @@ func TestNewPollingProjectConfigManagerOnDecision(t *testing.T) {
 		numberOfCalls++
 	}
 	id, _ := configManager.OnProjectConfigUpdate(callback)
-	mockRequester.AssertExpectations(t)
 
 	actual, err := configManager.GetConfig()
 	assert.Nil(t, err)
 	assert.NotNil(t, actual)
 
-	configManager.SyncConfig(mockDatafile2)
+	configManager.SyncConfig()
 	actual, err = configManager.GetConfig()
 	assert.Nil(t, err)
 	assert.NotNil(t, actual)
+	mockRequester.AssertExpectations(t)
 
 	assert.NotEqual(t, id, 0)
-	assert.Equal(t, numberOfCalls, 1)
-
-	err = configManager.RemoveOnProjectConfigUpdate(id)
-	assert.Nil(t, err)
+	assert.Equal(t, 1, numberOfCalls)
 
 	err = configManager.RemoveOnProjectConfigUpdate(id)
 	assert.Nil(t, err)
@@ -262,17 +259,4 @@ func TestDatafileTemplate(t *testing.T) {
 	configManager := NewPollingProjectConfigManager(sdkKey, WithDatafileURLTemplate(datafileTemplate))
 
 	assert.Equal(t, datafileTemplate, configManager.datafileURLTemplate)
-}
-
-func TestNotificationHandlers(t *testing.T) {
-
-	projectConfigUpdateCallback := func(notification notification.ProjectConfigUpdateNotification) {
-	}
-
-	sdkKey := "test_sdk_key"
-	exeCtx := utils.NewCancelableExecutionCtx()
-	configManager := NewPollingProjectConfigManager(sdkKey, WithNotificationHandlers(projectConfigUpdateCallback))
-	configManager.Start(exeCtx)
-
-	assert.Equal(t, len(configManager.projectConfigUpdateHandlers), 1)
 }
