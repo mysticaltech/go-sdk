@@ -84,23 +84,23 @@ func TestNewPollingProjectConfigManagerWithSimilarDatafileRevisions(t *testing.T
 	mockDatafile2 := []byte(`{"revision":"42","botFiltering":false}`)
 	projectConfig1, _ := datafileprojectconfig.NewDatafileProjectConfig(mockDatafile1)
 	mockRequester := new(MockRequester)
-	mockRequester.On("Get", []utils.Header(nil)).Return(mockDatafile1, http.Header{}, http.StatusOK, nil)
+	mockRequester.On("Get", []utils.Header(nil)).Return(mockDatafile2, http.Header{}, http.StatusOK, nil)
 
 	sdkKey := "test_sdk_key"
 
 	exeCtx := utils.NewCancelableExecutionCtx()
-	configManager := NewPollingProjectConfigManager(sdkKey, WithRequester(mockRequester))
+	configManager := NewPollingProjectConfigManager(sdkKey, WithRequester(mockRequester), WithStartByDefault(false), WithInitialDatafile(mockDatafile1))
 	configManager.Start(exeCtx)
-	mockRequester.AssertExpectations(t)
 
 	actual, err := configManager.GetConfig()
 	assert.Nil(t, err)
 	assert.NotNil(t, actual)
 	assert.Equal(t, projectConfig1, actual)
 
-	configManager.ValidateAndUpdateDatafile(mockDatafile2)
+	configManager.SyncConfig()
 	actual, err = configManager.GetConfig()
 	assert.Equal(t, projectConfig1, actual)
+	mockRequester.AssertExpectations(t)
 }
 
 func TestNewPollingProjectConfigManagerWithLastModifiedDates(t *testing.T) {
@@ -141,24 +141,24 @@ func TestNewPollingProjectConfigManagerWithDifferentDatafileRevisions(t *testing
 	projectConfig1, _ := datafileprojectconfig.NewDatafileProjectConfig(mockDatafile1)
 	projectConfig2, _ := datafileprojectconfig.NewDatafileProjectConfig(mockDatafile2)
 	mockRequester := new(MockRequester)
-	mockRequester.On("Get", []utils.Header(nil)).Return(mockDatafile1, http.Header{}, http.StatusOK, nil)
+	mockRequester.On("Get", []utils.Header(nil)).Return(mockDatafile2, http.Header{}, http.StatusOK, nil)
 
 	// Test we fetch using requester
 	sdkKey := "test_sdk_key"
 
 	exeCtx := utils.NewCancelableExecutionCtx()
-	configManager := NewPollingProjectConfigManager(sdkKey, WithRequester(mockRequester))
+	configManager := NewPollingProjectConfigManager(sdkKey, WithRequester(mockRequester), WithStartByDefault(false), WithInitialDatafile(mockDatafile1))
 	configManager.Start(exeCtx)
-	mockRequester.AssertExpectations(t)
 
 	actual, err := configManager.GetConfig()
 	assert.Nil(t, err)
 	assert.NotNil(t, actual)
 	assert.Equal(t, projectConfig1, actual)
 
-	configManager.ValidateAndUpdateDatafile(mockDatafile2)
+	configManager.SyncConfig()
 	actual, err = configManager.GetConfig()
 	assert.Equal(t, projectConfig2, actual)
+	mockRequester.AssertExpectations(t)
 }
 
 func TestNewPollingProjectConfigManagerWithErrorHandling(t *testing.T) {
