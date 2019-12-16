@@ -17,6 +17,7 @@
 package support
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
@@ -24,6 +25,7 @@ import (
 	"time"
 
 	"github.com/optimizely/go-sdk/tests/integration/models"
+	"github.com/optimizely/nsf/jsondiff"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/optimizely/go-sdk/pkg/config"
@@ -149,6 +151,19 @@ func parseTemplate(s string, config config.ProjectConfig) string {
 func getErrorWithDiff(a, b interface{}, message string) error {
 	diff := cmp.Diff(a, b)
 	return fmt.Errorf("%s:\n--expected\n++actual\n%s", message, diff)
+}
+
+func compareJSONObjects(expected, actual interface{}, comparisonType jsondiff.Difference) (result bool, difference string) {
+	if expectedJSON, err := json.Marshal(expected); err == nil {
+		if actualJSON, err := json.Marshal(actual); err == nil {
+			options := jsondiff.DefaultConsoleOptions()
+			// Taking actualJSON as first argument to consider it as superset in case of superset comparison
+			// https://godoc.org/github.com/nsf/jsondiff#Compare
+			diffType, difference := jsondiff.Compare(actualJSON, expectedJSON, &options)
+			return diffType == comparisonType, difference
+		}
+	}
+	return false, "JSON conversion failed"
 }
 
 // https://stackoverflow.com/a/36000696/4849178

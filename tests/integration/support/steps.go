@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/optimizely/go-sdk/pkg/logging"
+	"github.com/optimizely/nsf/jsondiff"
 
 	"github.com/optimizely/go-sdk/pkg/decision"
 
@@ -32,8 +33,9 @@ import (
 	"github.com/optimizely/go-sdk/tests/integration/models"
 	"github.com/optimizely/go-sdk/tests/integration/optlyplugins"
 	"github.com/optimizely/go-sdk/tests/integration/optlyplugins/userprofileservice"
-	"github.com/optimizely/subset"
 )
+
+var logger = logging.GetLogger("Steps")
 
 // ScenarioCtx holds both apiOptions and apiResponse for a scenario.
 type ScenarioCtx struct {
@@ -196,9 +198,11 @@ func (c *ScenarioCtx) InTheResponseShouldMatch(argumentType string, value *gherk
 	switch argumentType {
 	case models.KeyListenerCalled:
 		expectedListenersCalled := parseListeners(value.Content)
-		if subset.Check(expectedListenersCalled, c.apiResponse.ListenerCalled) {
+		result, diff := compareJSONObjects(expectedListenersCalled, c.apiResponse.ListenerCalled, jsondiff.FullMatch)
+		if result {
 			return nil
 		}
+		logger.Error(diff, nil)
 	default:
 		break
 	}
@@ -216,9 +220,11 @@ func (c *ScenarioCtx) ResponseShouldHaveThisExactlyNTimes(argumentType string, c
 			for i := 0; i < count; i++ {
 				expectedListenersArray = append(expectedListenersArray, requestListeners[0])
 			}
-			if subset.Check(expectedListenersArray, c.apiResponse.ListenerCalled) {
+			result, diff := compareJSONObjects(expectedListenersArray, c.apiResponse.ListenerCalled, jsondiff.FullMatch)
+			if result {
 				return nil
 			}
+			logger.Error(diff, nil)
 		}
 	default:
 		break
@@ -234,13 +240,15 @@ func (c *ScenarioCtx) InTheResponseShouldHaveEachOneOfThese(argumentType string,
 		found := false
 		for _, expectedListener := range expectedListenersCalled {
 			found = false
+			diff := ""
 			for _, actualListener := range c.apiResponse.ListenerCalled {
-				if subset.Check(expectedListener, actualListener) {
-					found = true
+				found, diff = compareJSONObjects(expectedListener, actualListener, jsondiff.FullMatch)
+				if found {
 					break
 				}
 			}
 			if !found {
+				logger.Error(diff, nil)
 				break
 			}
 		}
@@ -343,10 +351,12 @@ func (c *ScenarioCtx) DispatchedEventsPayloadsInclude(value *gherkin.DocString) 
 
 		expectedBatchEvents = sortAttributesForEvents(expectedBatchEvents)
 		actualBatchEvents = sortAttributesForEvents(actualBatchEvents)
-		result := subset.Check(expectedBatchEvents, actualBatchEvents)
+
+		result, diff := compareJSONObjects(expectedBatchEvents, actualBatchEvents, jsondiff.SupersetMatch)
 		if result {
 			return result, ""
 		}
+		logger.Error(diff, nil)
 		return result, "DispatchedEvents not equal"
 	}
 
@@ -393,23 +403,29 @@ func (c *ScenarioCtx) TheUserProfileServiceStateShouldBe(value *gherkin.DocStrin
 	expectedProfiles := userprofileservice.ParseUserProfiles(rawProfiles)
 	actualProfiles := c.clientWrapper.userProfileService.(userprofileservice.UPSHelper).GetUserProfiles()
 
-	success := false
+	found := false
 	for _, expectedProfile := range expectedProfiles {
-		success = false
+		found = false
 		for _, actualProfile := range actualProfiles {
-			if subset.Check(expectedProfile, actualProfile) {
-				success = true
+			if expectedProfile.ID == actualProfile.ID {
+				for key, value := range expectedProfile.ExperimentBucketMap {
+					found = actualProfile.ExperimentBucketMap[key] == value
+					if !found {
+						break
+					}
+				}
+			}
+			if found {
 				break
 			}
 		}
-		if !success {
+		if !found {
 			break
 		}
 	}
-	if success {
+	if found {
 		return nil
 	}
-	// @TODO: Temporary fix, need to look into it
 	return getErrorWithDiff(expectedProfiles, actualProfiles, "User profile state not equal")
 }
 
@@ -419,7 +435,6 @@ func (c *ScenarioCtx) ThereIsNoUserProfileState() error {
 	if len(actualProfiles) == 0 {
 		return nil
 	}
-	// @TODO: Temporary fix, need to look into it
 	return getErrorWithDiff([]decision.UserProfile{}, actualProfiles, "User profile state not empty")
 }
 

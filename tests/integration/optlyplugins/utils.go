@@ -45,7 +45,7 @@ func CloseLogFile() {
 	}
 }
 
-// WriteToLogFile writes provided string value to a file
+// WriteToLogFile writes provided string value to the logfile
 func WriteToLogFile(str string) {
 	if logfile == nil {
 		return
