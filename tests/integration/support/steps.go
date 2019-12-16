@@ -22,8 +22,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/nsf/jsondiff"
 	"github.com/optimizely/go-sdk/pkg/logging"
-	"github.com/optimizely/nsf/jsondiff"
 
 	"github.com/optimizely/go-sdk/pkg/decision"
 

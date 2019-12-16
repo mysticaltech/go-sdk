@@ -24,8 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nsf/jsondiff"
 	"github.com/optimizely/go-sdk/tests/integration/models"
-	"github.com/optimizely/nsf/jsondiff"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/optimizely/go-sdk/pkg/config"
