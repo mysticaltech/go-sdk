@@ -35,6 +35,8 @@ import (
 	"github.com/optimizely/go-sdk/tests/integration/optlyplugins/userprofileservice"
 )
 
+/// call it FSC logger
+/// Am assuming we can set the same logger for optimizely sdk.
 var logger = logging.GetLogger("Steps")
 
 // ScenarioCtx holds both apiOptions and apiResponse for a scenario.
@@ -391,6 +393,7 @@ func (c *ScenarioCtx) PayloadsOfDispatchedEventsDontIncludeDecisions() error {
 
 // TheUserProfileServiceStateShouldBe checks current state of UPS
 func (c *ScenarioCtx) TheUserProfileServiceStateShouldBe(value *gherkin.DocString) error {
+	/// do we really need to revise this method.
 	config, err := c.clientWrapper.client.GetProjectConfig()
 	if err != nil {
 		return fmt.Errorf("Invalid Project Config")

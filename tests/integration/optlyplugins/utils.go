@@ -16,6 +16,9 @@
 
 package optlyplugins
 
+/// [Sohail]: Call it log file handler. And it should be generic. Called openFile/closeFile.
+/// Use separate struct and put all those method in there. struct should have only three attributes
+/// name, flag, filemode
 import (
 	"log"
 	"os"
@@ -29,6 +32,7 @@ func OpenLogFile() {
 		return
 	}
 	var err error
+	// define as constant.
 	logfile, err = os.OpenFile("/tmp/dat1", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
