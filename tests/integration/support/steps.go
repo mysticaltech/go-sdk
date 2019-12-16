@@ -22,6 +22,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/optimizely/go-sdk/pkg/logging"
+
 	"github.com/optimizely/go-sdk/pkg/decision"
 
 	"github.com/DATA-DOG/godog/gherkin"
@@ -430,4 +432,7 @@ func (c *ScenarioCtx) Reset() {
 	c.apiResponse = models.APIResponse{}
 	c.clientWrapper = nil
 	c.scenarioID = uuid.New().String()
+
+	// Creating custom logger for every scenario
+	logging.SetLogger(optlyplugins.CustomLogger{ScenarioID: c.scenarioID})
 }

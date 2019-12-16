@@ -23,6 +23,7 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
+	"github.com/optimizely/go-sdk/tests/integration/optlyplugins"
 	"github.com/optimizely/go-sdk/tests/integration/support"
 )
 
@@ -49,6 +50,14 @@ func TestMain(m *testing.M) {
 func FeatureContext(s *godog.Suite) {
 
 	context := new(support.ScenarioCtx)
+	// Create logger and open log file before steps are executed
+	s.BeforeSuite(func() {
+		optlyplugins.OpenLogFile()
+	})
+	// Close log file after all steps have been executed
+	s.AfterSuite(func() {
+		optlyplugins.CloseLogFile()
+	})
 	// Resetting context before each scenario
 	s.BeforeScenario(func(interface{}) {
 		context.Reset()
