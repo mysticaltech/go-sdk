@@ -38,6 +38,7 @@ func (l *LogFileHandler) OpenFile() {
 		l.CloseFile()
 	}
 	var err error
+	l.waitgroup = sync.WaitGroup{}
 	l.logfile, err = os.OpenFile(l.Name, l.Flag, l.Mode)
 	if err != nil {
 		log.Fatal(err)
@@ -62,8 +63,10 @@ func (l *LogFileHandler) WriteToFile(str string) {
 		return
 	}
 	l.waitgroup.Add(1)
-	if _, err := l.logfile.Write([]byte(str)); err != nil {
-		log.Fatal(err)
-	}
-	l.waitgroup.Done()
+	go func() {
+		defer l.waitgroup.Done()
+		if _, err := l.logfile.Write([]byte(str)); err != nil {
+			log.Fatal(err)
+		}
+	}()
 }
