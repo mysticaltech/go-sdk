@@ -14,7 +14,7 @@
  * limitations under the License.                                           *
  ***************************************************************************/
 
-package optlyplugins
+package logger
 
 import (
 	"fmt"
@@ -24,19 +24,17 @@ import (
 
 // CustomLogger custom implementation of OptimizelyLogConsumer interface
 type CustomLogger struct {
-	ScenarioID string
-	level      logging.LogLevel
+	ScenarioID     string
+	LogFileHandler *LogFileHandler
+	level          logging.LogLevel
 }
 
 // Log stores the message in the logfile
 func (l CustomLogger) Log(level logging.LogLevel, message string, fields map[string]interface{}) {
 	if l.level <= level {
-		// prepends the name and log level to the message
-		//TODO: what is fields[name]
+		// prepends the name and log level to the message, similar to the sdk implementation
 		message = fmt.Sprintf("[OPTIMIZELY][%s][Request: %s][%s] %s", level, l.ScenarioID, fields["name"], message)
-
-		//TODO: Tis can be expensive, for now it's fine but we should call it async.
-		WriteToLogFile(message)
+		go l.LogFileHandler.WriteToFile(message)
 	}
 }
 

@@ -14,47 +14,56 @@
  * limitations under the License.                                           *
  ***************************************************************************/
 
-package optlyplugins
+package logger
 
-/// [Sohail]: Call it log file handler. And it should be generic. Called openFile/closeFile.
-/// Use separate struct and put all those method in there. struct should have only three attributes
-/// name, flag, filemode
 import (
 	"log"
 	"os"
+	"sync"
 )
 
-var logfile *os.File
+// LogFileHandler manager class for log file handling
+type LogFileHandler struct {
+	Name      string
+	Flag      int
+	Mode      os.FileMode
+	logfile   *os.File
+	waitgroup sync.WaitGroup
+}
 
-// OpenLogFile opens the logfile
-func OpenLogFile() {
-	if logfile != nil {
-		return
+// OpenFile opens the file with the provided name
+func (l *LogFileHandler) OpenFile() {
+	if l.logfile != nil {
+		// Close already opened file
+		l.CloseFile()
 	}
 	var err error
-	// define as constant.
-	logfile, err = os.OpenFile("/tmp/dat1", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	l.logfile, err = os.OpenFile(l.Name, l.Flag, l.Mode)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-// CloseLogFile closes the logfile
-func CloseLogFile() {
-	if logfile == nil {
+// CloseFile closes the file
+func (l *LogFileHandler) CloseFile() {
+	if l.logfile == nil {
 		return
 	}
-	if err := logfile.Close(); err != nil {
+	l.waitgroup.Wait()
+	if err := l.logfile.Close(); err != nil {
 		log.Fatal(err)
 	}
+	l.logfile = nil
 }
 
-// WriteToLogFile writes provided string value to the logfile
-func WriteToLogFile(str string) {
-	if logfile == nil {
+// WriteToFile writes provided string value to the opened file
+func (l *LogFileHandler) WriteToFile(str string) {
+	if l.logfile == nil {
 		return
 	}
-	if _, err := logfile.Write([]byte(str)); err != nil {
+	l.waitgroup.Add(1)
+	if _, err := l.logfile.Write([]byte(str)); err != nil {
 		log.Fatal(err)
 	}
+	l.waitgroup.Done()
 }

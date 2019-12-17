@@ -32,19 +32,19 @@ import (
 	"github.com/optimizely/go-sdk/pkg/entities"
 	"github.com/optimizely/go-sdk/tests/integration/models"
 	"github.com/optimizely/go-sdk/tests/integration/optlyplugins"
+	"github.com/optimizely/go-sdk/tests/integration/optlyplugins/logger"
 	"github.com/optimizely/go-sdk/tests/integration/optlyplugins/userprofileservice"
 )
 
-/// call it FSC logger
-/// Am assuming we can set the same logger for optimizely sdk.
-var logger = logging.GetLogger("Steps")
+var fscLogger = logging.GetLogger("Steps")
 
 // ScenarioCtx holds both apiOptions and apiResponse for a scenario.
 type ScenarioCtx struct {
-	scenarioID    string
-	apiOptions    models.APIOptions
-	apiResponse   models.APIResponse
-	clientWrapper *ClientWrapper
+	scenarioID     string
+	apiOptions     models.APIOptions
+	apiResponse    models.APIResponse
+	clientWrapper  *ClientWrapper
+	LogFileHandler *logger.LogFileHandler
 }
 
 // TheDatafileIs defines a datafileName to initialize the client with.
@@ -204,7 +204,7 @@ func (c *ScenarioCtx) InTheResponseShouldMatch(argumentType string, value *gherk
 		if result {
 			return nil
 		}
-		logger.Error(diff, nil)
+		fscLogger.Error(diff, nil)
 	default:
 		break
 	}
@@ -226,7 +226,7 @@ func (c *ScenarioCtx) ResponseShouldHaveThisExactlyNTimes(argumentType string, c
 			if result {
 				return nil
 			}
-			logger.Error(diff, nil)
+			fscLogger.Error(diff, nil)
 		}
 	default:
 		break
@@ -250,7 +250,7 @@ func (c *ScenarioCtx) InTheResponseShouldHaveEachOneOfThese(argumentType string,
 				}
 			}
 			if !found {
-				logger.Error(diff, nil)
+				fscLogger.Error(diff, nil)
 				break
 			}
 		}
@@ -358,7 +358,7 @@ func (c *ScenarioCtx) DispatchedEventsPayloadsInclude(value *gherkin.DocString) 
 		if result {
 			return result, ""
 		}
-		logger.Error(diff, nil)
+		fscLogger.Error(diff, nil)
 		return result, "DispatchedEvents not equal"
 	}
 
@@ -393,7 +393,7 @@ func (c *ScenarioCtx) PayloadsOfDispatchedEventsDontIncludeDecisions() error {
 
 // TheUserProfileServiceStateShouldBe checks current state of UPS
 func (c *ScenarioCtx) TheUserProfileServiceStateShouldBe(value *gherkin.DocString) error {
-	/// do we really need to revise this method.
+	// Custom comparison required here since UserProfile struct cannot be marshalled to json
 	config, err := c.clientWrapper.client.GetProjectConfig()
 	if err != nil {
 		return fmt.Errorf("Invalid Project Config")
@@ -452,5 +452,8 @@ func (c *ScenarioCtx) Reset() {
 	c.scenarioID = uuid.New().String()
 
 	// Creating custom logger for every scenario
-	logging.SetLogger(optlyplugins.CustomLogger{ScenarioID: c.scenarioID})
+	logging.SetLogger(logger.CustomLogger{
+		ScenarioID:     c.scenarioID,
+		LogFileHandler: c.LogFileHandler,
+	})
 }
