@@ -21,11 +21,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/optimizely/go-sdk/tests/integration/optlyplugins/logger"
+
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
-	"github.com/optimizely/go-sdk/tests/integration/optlyplugins"
 	"github.com/optimizely/go-sdk/tests/integration/support"
 )
+
+const logfileName = "/tmp/dat1"
 
 var opt = godog.Options{Output: colors.Colored(os.Stdout)}
 
@@ -49,14 +52,20 @@ func TestMain(m *testing.M) {
 
 func FeatureContext(s *godog.Suite) {
 
-	context := new(support.ScenarioCtx)
+	context := support.ScenarioCtx{
+		LogFileHandler: &logger.LogFileHandler{
+			Name: logfileName,
+			Flag: os.O_APPEND | os.O_CREATE | os.O_WRONLY,
+			Mode: 0644,
+		},
+	}
 	// Create logger and open log file before steps are executed
 	s.BeforeSuite(func() {
-		optlyplugins.OpenLogFile()
+		context.LogFileHandler.OpenFile()
 	})
 	// Close log file after all steps have been executed
 	s.AfterSuite(func() {
-		optlyplugins.CloseLogFile()
+		context.LogFileHandler.CloseFile()
 	})
 	// Resetting context before each scenario
 	s.BeforeScenario(func(interface{}) {
