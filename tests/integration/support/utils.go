@@ -148,9 +148,9 @@ func parseTemplate(s string, config config.ProjectConfig) string {
 	return parsedString
 }
 
-func getErrorWithDiff(a, b interface{}, message string) error {
+func getDiffWithMessage(a, b interface{}, message string) string {
 	diff := cmp.Diff(a, b)
-	return fmt.Errorf("%s:\n--expected\n++actual\n%s", message, diff)
+	return fmt.Sprintf("%s:\n--expected\n++actual\n%s", message, diff)
 }
 
 func compareJSONObjects(expected, actual interface{}, comparisonType jsondiff.Difference) (result bool, difference string) {
@@ -205,4 +205,11 @@ func evaluateDispatchedEventsWithTimeout(evaluationMethod func() (result bool, e
 	time.Sleep(200 * time.Millisecond)
 	result, errorMessage = evaluationMethod()
 	return result, errorMessage
+}
+
+// Logs message on console and fscLogger and returns it as error
+func logAndReturnError(message string) error {
+	fmt.Println(message)
+	fscLogger.Error(message, nil)
+	return fmt.Errorf(message)
 }

@@ -19,16 +19,14 @@ package logger
 import (
 	"log"
 	"os"
-	"sync"
 )
 
 // LogFileHandler manager class for log file handling
 type LogFileHandler struct {
-	Name      string
-	Flag      int
-	Mode      os.FileMode
-	logfile   *os.File
-	waitgroup sync.WaitGroup
+	Name    string
+	Flag    int
+	Mode    os.FileMode
+	logfile *os.File
 }
 
 // OpenFile opens the file with the provided name
@@ -38,7 +36,6 @@ func (l *LogFileHandler) OpenFile() {
 		l.CloseFile()
 	}
 	var err error
-	l.waitgroup = sync.WaitGroup{}
 	l.logfile, err = os.OpenFile(l.Name, l.Flag, l.Mode)
 	if err != nil {
 		log.Fatal(err)
@@ -50,23 +47,18 @@ func (l *LogFileHandler) CloseFile() {
 	if l.logfile == nil {
 		return
 	}
-	l.waitgroup.Wait()
 	if err := l.logfile.Close(); err != nil {
 		log.Fatal(err)
 	}
 	l.logfile = nil
 }
 
-// WriteToFile writes provided string value to the opened file
-func (l *LogFileHandler) WriteToFile(str string) {
+// Write writes provided string value to the opened file
+func (l *LogFileHandler) Write(str string) {
 	if l.logfile == nil {
 		return
 	}
-	l.waitgroup.Add(1)
-	go func() {
-		defer l.waitgroup.Done()
-		if _, err := l.logfile.Write([]byte(str)); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	if _, err := l.logfile.Write([]byte(str)); err != nil {
+		log.Fatal(err)
+	}
 }

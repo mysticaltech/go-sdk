@@ -34,7 +34,7 @@ func (l CustomLogger) Log(level logging.LogLevel, message string, fields map[str
 	if l.level <= level {
 		// prepends the name and log level to the message, similar to the sdk implementation
 		message = fmt.Sprintf("[OPTIMIZELY][%s][Request: %s][%s] %s", level, l.ScenarioID, fields["name"], message)
-		l.LogFileHandler.WriteToFile(message)
+		l.LogFileHandler.Write(message)
 	}
 }
 

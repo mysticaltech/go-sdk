@@ -98,24 +98,24 @@ func (c *ScenarioCtx) IsCalledWithArguments(apiName string, arguments *gherkin.D
 	if err == nil {
 		return nil
 	}
-	return fmt.Errorf("invalid api or arguments")
+	return logAndReturnError("invalid api or arguments")
 }
 
 // TheResultShouldBeString checks that the result is of type string with the given value.
 func (c *ScenarioCtx) TheResultShouldBeString(result string) error {
 	if c.apiResponse.Type != "" && c.apiResponse.Type != entities.String {
-		return fmt.Errorf("incorrect type")
+		return logAndReturnError("incorrect type")
 	}
 	if result == c.apiResponse.Result {
 		return nil
 	}
-	return fmt.Errorf("incorrect result")
+	return logAndReturnError("incorrect result")
 }
 
 // TheResultShouldBeInteger checks that the result is of type integer with the given value.
 func (c *ScenarioCtx) TheResultShouldBeInteger(result int) error {
 	if c.apiResponse.Type != "" && c.apiResponse.Type != entities.Integer {
-		return fmt.Errorf("incorrect type")
+		return logAndReturnError("incorrect type")
 	}
 	responseIntValue := c.apiResponse.Result
 	if stringIntValue, ok := c.apiResponse.Result.(string); ok {
@@ -124,14 +124,14 @@ func (c *ScenarioCtx) TheResultShouldBeInteger(result int) error {
 	if result == responseIntValue {
 		return nil
 	}
-	return fmt.Errorf("incorrect result")
+	return logAndReturnError("incorrect result")
 }
 
 // TheResultShouldBeFloat checks that the result is of type double with the given value.
 func (c *ScenarioCtx) TheResultShouldBeFloat(lv, rv int) error {
 	floatvalue, _ := strconv.ParseFloat(fmt.Sprintf("%v.%v", lv, rv), 64)
 	if c.apiResponse.Type != "" && c.apiResponse.Type != entities.Double {
-		return fmt.Errorf("incorrect type")
+		return logAndReturnError("incorrect type")
 	}
 	responseFloatValue := c.apiResponse.Result
 	if stringFloatValue, ok := c.apiResponse.Result.(string); ok {
@@ -140,14 +140,14 @@ func (c *ScenarioCtx) TheResultShouldBeFloat(lv, rv int) error {
 	if floatvalue == responseFloatValue {
 		return nil
 	}
-	return fmt.Errorf("incorrect result")
+	return logAndReturnError("incorrect result")
 }
 
 // TheResultShouldBeTypedBoolean checks that the result is of type boolean with the given value.
 func (c *ScenarioCtx) TheResultShouldBeTypedBoolean(result string) error {
 	boolValue, _ := strconv.ParseBool(result)
 	if c.apiResponse.Type != "" && c.apiResponse.Type != entities.Boolean {
-		return fmt.Errorf("incorrect type")
+		return logAndReturnError("incorrect type")
 	}
 	responseBoolValue := c.apiResponse.Result
 	if stringBoolValue, ok := c.apiResponse.Result.(string); ok {
@@ -156,7 +156,7 @@ func (c *ScenarioCtx) TheResultShouldBeTypedBoolean(result string) error {
 	if boolValue == responseBoolValue {
 		return nil
 	}
-	return fmt.Errorf("incorrect result")
+	return logAndReturnError("incorrect result")
 }
 
 // TheResultShouldBeBoolean checks that the result is equal to the given boolean value.
@@ -165,7 +165,7 @@ func (c *ScenarioCtx) TheResultShouldBeBoolean() error {
 	if boolValue == false {
 		return nil
 	}
-	return fmt.Errorf("incorrect result")
+	return logAndReturnError("incorrect result")
 }
 
 // TheResultShouldMatchList checks that the result equals to the provided list.
@@ -179,7 +179,7 @@ func (c *ScenarioCtx) TheResultShouldMatchList(list string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("incorrect result")
+	return logAndReturnError("incorrect result")
 }
 
 // InTheResponseKeyShouldBeObject checks that the response object contains a property with given value.
@@ -192,7 +192,7 @@ func (c *ScenarioCtx) InTheResponseKeyShouldBeObject(argumentType, value string)
 	default:
 		break
 	}
-	return fmt.Errorf("incorrect listeners called")
+	return logAndReturnError("incorrect listeners called")
 }
 
 // InTheResponseShouldMatch checks that the response object contains a property with matching value.
@@ -208,8 +208,7 @@ func (c *ScenarioCtx) InTheResponseShouldMatch(argumentType string, value *gherk
 	default:
 		break
 	}
-
-	return fmt.Errorf("response for %s not equal", argumentType)
+	return logAndReturnError(fmt.Sprintf("response for %s not equal", argumentType))
 }
 
 // ResponseShouldHaveThisExactlyNTimes checks that the response object has the given property exactly N times.
@@ -231,7 +230,7 @@ func (c *ScenarioCtx) ResponseShouldHaveThisExactlyNTimes(argumentType string, c
 	default:
 		break
 	}
-	return fmt.Errorf("response for %s not equal", argumentType)
+	return logAndReturnError(fmt.Sprintf("response for %s not equal", argumentType))
 }
 
 // InTheResponseShouldHaveEachOneOfThese checks that the response object contains each of the provided properties.
@@ -260,7 +259,7 @@ func (c *ScenarioCtx) InTheResponseShouldHaveEachOneOfThese(argumentType string,
 	default:
 		break
 	}
-	return fmt.Errorf("response for %s not equal", argumentType)
+	return logAndReturnError(fmt.Sprintf("response for %s not equal", argumentType))
 }
 
 // TheNumberOfDispatchedEventsIs checks the count of the dispatched events to be equal to the given value.
@@ -277,7 +276,7 @@ func (c *ScenarioCtx) TheNumberOfDispatchedEventsIs(count int) error {
 	if result {
 		return nil
 	}
-	return fmt.Errorf(errorMessage)
+	return logAndReturnError(errorMessage)
 }
 
 // ThereAreNoDispatchedEvents checks the dispatched events count to be empty.
@@ -294,7 +293,7 @@ func (c *ScenarioCtx) ThereAreNoDispatchedEvents() error {
 	if result {
 		return nil
 	}
-	return fmt.Errorf(errorMessage)
+	return logAndReturnError(errorMessage)
 }
 
 // DispatchedEventsPayloadsInclude checks dispatched events to contain the given events.
@@ -302,11 +301,11 @@ func (c *ScenarioCtx) DispatchedEventsPayloadsInclude(value *gherkin.DocString) 
 
 	config, err := c.clientWrapper.client.GetProjectConfig()
 	if err != nil {
-		return fmt.Errorf("Invalid Project Config")
+		return logAndReturnError("Invalid Project Config")
 	}
 	expectedBatchEvents, err := parseYamlArray(value.Content, config)
 	if err != nil {
-		return fmt.Errorf("Invalid request for dispatched Events")
+		return logAndReturnError("Invalid request for dispatched Events")
 	}
 
 	evaluationMethod := func() (bool, string) {
@@ -366,7 +365,7 @@ func (c *ScenarioCtx) DispatchedEventsPayloadsInclude(value *gherkin.DocString) 
 	if result {
 		return nil
 	}
-	return fmt.Errorf(errorMessage)
+	return logAndReturnError(errorMessage)
 }
 
 // PayloadsOfDispatchedEventsDontIncludeDecisions checks dispatched events to contain no decisions.
@@ -388,7 +387,7 @@ func (c *ScenarioCtx) PayloadsOfDispatchedEventsDontIncludeDecisions() error {
 	if result {
 		return nil
 	}
-	return fmt.Errorf(errorMessage)
+	return logAndReturnError(errorMessage)
 }
 
 // TheUserProfileServiceStateShouldBe checks current state of UPS
@@ -396,11 +395,11 @@ func (c *ScenarioCtx) TheUserProfileServiceStateShouldBe(value *gherkin.DocStrin
 	// Custom comparison required here since UserProfile struct cannot be marshalled to json
 	config, err := c.clientWrapper.client.GetProjectConfig()
 	if err != nil {
-		return fmt.Errorf("Invalid Project Config")
+		return logAndReturnError("Invalid Project Config")
 	}
 	rawProfiles, err := parseYamlArray(value.Content, config)
 	if err != nil {
-		return fmt.Errorf("Invalid request for user profile service state")
+		return logAndReturnError("Invalid request for user profile service state")
 	}
 
 	expectedProfiles := userprofileservice.ParseUserProfiles(rawProfiles)
@@ -429,7 +428,7 @@ func (c *ScenarioCtx) TheUserProfileServiceStateShouldBe(value *gherkin.DocStrin
 	if found {
 		return nil
 	}
-	return getErrorWithDiff(expectedProfiles, actualProfiles, "User profile state not equal")
+	return logAndReturnError(getDiffWithMessage(expectedProfiles, actualProfiles, "User profile state not equal"))
 }
 
 // ThereIsNoUserProfileState checks that UPS is empty
@@ -438,7 +437,7 @@ func (c *ScenarioCtx) ThereIsNoUserProfileState() error {
 	if len(actualProfiles) == 0 {
 		return nil
 	}
-	return getErrorWithDiff([]decision.UserProfile{}, actualProfiles, "User profile state not empty")
+	return logAndReturnError(getDiffWithMessage([]decision.UserProfile{}, actualProfiles, "User profile state not empty"))
 }
 
 // Reset clears all data before each scenario, assigns new scenarioID and sets session as false
