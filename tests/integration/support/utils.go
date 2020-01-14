@@ -73,6 +73,12 @@ func sortArrayofMaps(array []map[string]interface{}, sortKey string) []map[strin
 	return array
 }
 
+func parseOptimizelyConfig(s string, projectConfig config.ProjectConfig) *config.OptimizelyConfig {
+	optimizelyConfig := config.OptimizelyConfig{}
+	optimizelyConfig.Revision = projectConfig.GetRevision()
+	return &optimizelyConfig
+}
+
 func parseYamlArray(s string, config config.ProjectConfig) ([]map[string]interface{}, error) {
 	var array []map[string]interface{}
 	parsedString := parseTemplate(s, config)

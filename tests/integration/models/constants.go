@@ -65,6 +65,8 @@ const (
 	SetForcedVariation SDKAPI = "set_forced_variation"
 	// GetForcedVariation - the api type is GetForcedVariation
 	GetForcedVariation SDKAPI = "get_forced_variation"
+	// GetOptimizelyConfig - the api type is GetOptimizelyConfig
+	GetOptimizelyConfig SDKAPI = "get_optimizely_config"
 )
 
 // KeyListenerCalled - Key for listener called

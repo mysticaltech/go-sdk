@@ -58,6 +58,9 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the User Profile Service is "([^"]*)"$`, context.TheUserProfileServiceIs)
 	s.Step(`^user "([^"]*)" has mapping "([^"]*)": "([^"]*)" in User Profile Service$`, context.UserHasMappingInUserProfileService)
 	s.Step(`^([^\\\"]*) is called with arguments$`, context.IsCalledWithArguments)
+	s.Step(`^get_optimizely_config is called$`, context.GetOptimizelyConfigIsCalled)
+	s.Step(`^the result should match$`, context.TheResultShouldMatch)
+
 	s.Step(`^the result should be (?:string )?"([^"]*)"$`, context.TheResultShouldBeString)
 	s.Step(`^the result should be (?:integer )?(\d+)$`, context.TheResultShouldBeInteger)
 	s.Step(`^the result should be (?:double )?(\d+)\.(\d+)$`, context.TheResultShouldBeFloat)

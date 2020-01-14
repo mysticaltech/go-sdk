@@ -95,6 +95,29 @@ func (c *ScenarioCtx) IsCalledWithArguments(apiName string, arguments *gherkin.D
 	return fmt.Errorf("invalid api or arguments")
 }
 
+// GetOptimizelyConfigIsCalled calls GetOptimizelyConfig API.
+func (c *ScenarioCtx) GetOptimizelyConfigIsCalled() error {
+	c.apiOptions.APIName = string(models.GetOptimizelyConfig)
+	// Clearing old state of response, eventdispatcher and decision service
+	c.apiResponse = models.APIResponse{}
+	c.clientWrapper = GetInstance(c.apiOptions)
+	response, _ := c.clientWrapper.InvokeAPI(c.apiOptions)
+	c.apiResponse = response
+	//Reset listeners so that same listener is not added twice for a scenario
+	c.apiOptions.Listeners = nil
+	return nil
+}
+
+// TheResultShouldMatch checks that the result matches the provided value.
+func (c *ScenarioCtx) TheResultShouldMatch(expectedResult *gherkin.DocString) error {
+	projectConfig := c.clientWrapper.GetProjectConfig()
+	expectedConfig := parseOptimizelyConfig(expectedResult.Content, projectConfig)
+	if subset.Check(*expectedConfig, c.apiResponse) {
+		return nil
+	}
+	return fmt.Errorf("incorrect result")
+}
+
 // TheResultShouldBeString checks that the result is of type string with the given value.
 func (c *ScenarioCtx) TheResultShouldBeString(result string) error {
 	if c.apiResponse.Type != "" && c.apiResponse.Type != entities.String {

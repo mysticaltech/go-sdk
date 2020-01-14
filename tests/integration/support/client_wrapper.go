@@ -173,6 +173,9 @@ func (c *ClientWrapper) InvokeAPI(request models.APIOptions) (models.APIResponse
 	case models.GetForcedVariation:
 		response, err = c.getForcedVariation(request)
 		break
+	case models.GetOptimizelyConfig:
+		response = c.getOptimizelyConfig()
+		break
 	default:
 		break
 	}
@@ -384,4 +387,14 @@ func (c *ClientWrapper) getForcedVariation(request models.APIOptions) (models.AP
 		}
 	}
 	return response, err
+}
+
+func (c *ClientWrapper) getOptimizelyConfig() models.APIResponse {
+	var response models.APIResponse
+	response.Result = "NULL"
+	config := c.client.GetOptimizelyConfig()
+	if config != nil {
+		response.Result = *config
+	}
+	return response
 }
