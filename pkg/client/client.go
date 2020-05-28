@@ -283,6 +283,29 @@ func (o *OptimizelyClient) GetAllFeatureVariables(featureKey string, userContext
 	return enabled, variableMap, err
 }
 
+// GetFeatureDecisionKeysAndTrack triggers impression event if applicable and returns experiment and variation key.
+func (o *OptimizelyClient) GetFeatureDecisionKeysAndTrack(featureKey string, userContext entities.UserContext, disableTracking bool) (experimentKey, variationKey string) {
+	decisionContext, featureDecision, err := o.getFeatureDecision(featureKey, "", userContext)
+
+	if err != nil {
+		o.logger.Error("Optimizely SDK tracking error", err)
+		return experimentKey, variationKey
+	}
+
+	if featureDecision.Variation != nil {
+		variationKey = featureDecision.Variation.Key
+		experimentKey = featureDecision.Experiment.Key
+
+		// Triggers impression events when applicable
+		if !disableTracking && featureDecision.Source == decision.FeatureTest {
+			// send impression event for feature tests
+			impressionEvent := event.CreateImpressionUserEvent(decisionContext.ProjectConfig, featureDecision.Experiment, *featureDecision.Variation, userContext)
+			o.EventProcessor.ProcessEvent(impressionEvent)
+		}
+	}
+	return
+}
+
 // GetVariation returns the key of the variation the user is bucketed into. Does not generate impression events.
 func (o *OptimizelyClient) GetVariation(experimentKey string, userContext entities.UserContext) (result string, err error) {
 
