@@ -285,20 +285,21 @@ func (o *OptimizelyClient) GetAllFeatureVariables(featureKey string, userContext
 
 // GetDetailedFeatureDecisionUnsafe triggers an impression event and returns all the variables
 // for a given feature along with the experiment key, variation key and the enabled state.
-func (o *OptimizelyClient) GetDetailedFeatureDecisionUnsafe(featureKey string, userContext entities.UserContext, disableTracking bool) (decisionInfoUnsafe entities.UnsafeFeatureDecisionInfo, err error) {
+// Usage of this method is unsafe and not recommended since it can be removed in any of the next releases.
+func (o *OptimizelyClient) GetDetailedFeatureDecisionUnsafe(featureKey string, userContext entities.UserContext, disableTracking bool) (decisionInfo decision.UnsafeFeatureDecisionInfo, err error) {
 
-	decisionInfoUnsafe = entities.UnsafeFeatureDecisionInfo{}
-	decisionInfoUnsafe.VariableMap = make(map[string]interface{})
+	decisionInfo = decision.UnsafeFeatureDecisionInfo{}
+	decisionInfo.VariableMap = make(map[string]interface{})
 	decisionContext, featureDecision, err := o.getFeatureDecision(featureKey, "", userContext)
 	if err != nil {
 		o.logger.Error("Optimizely SDK tracking error", err)
-		return decisionInfoUnsafe, err
+		return decisionInfo, err
 	}
 
 	if featureDecision.Variation != nil {
-		decisionInfoUnsafe.Enabled = featureDecision.Variation.FeatureEnabled
-		decisionInfoUnsafe.VariationKey = featureDecision.Variation.Key
-		decisionInfoUnsafe.ExperimentKey = featureDecision.Experiment.Key
+		decisionInfo.Enabled = featureDecision.Variation.FeatureEnabled
+		decisionInfo.VariationKey = featureDecision.Variation.Key
+		decisionInfo.ExperimentKey = featureDecision.Experiment.Key
 
 		// Triggers impression events when applicable
 		if !disableTracking && featureDecision.Source == decision.FeatureTest {
@@ -311,13 +312,13 @@ func (o *OptimizelyClient) GetDetailedFeatureDecisionUnsafe(featureKey string, u
 	feature := decisionContext.Feature
 	if feature == nil {
 		o.logger.Warning(fmt.Sprintf(`feature "%s" does not exist`, featureKey))
-		return decisionInfoUnsafe, nil
+		return decisionInfo, nil
 	}
 
 	for _, v := range feature.VariableMap {
 		val := v.DefaultValue
 
-		if decisionInfoUnsafe.Enabled {
+		if decisionInfo.Enabled {
 			if variable, ok := featureDecision.Variation.Variables[v.ID]; ok {
 				val = variable.Value
 			}
@@ -337,10 +338,10 @@ func (o *OptimizelyClient) GetDetailedFeatureDecisionUnsafe(featureKey string, u
 			o.logger.Warning(fmt.Sprintf(`type "%s" is unknown, returning string`, varType))
 		}
 
-		decisionInfoUnsafe.VariableMap[v.Key] = out
+		decisionInfo.VariableMap[v.Key] = out
 	}
 
-	return decisionInfoUnsafe, err
+	return decisionInfo, err
 }
 
 // GetVariation returns the key of the variation the user is bucketed into. Does not generate impression events.

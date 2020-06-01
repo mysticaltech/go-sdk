@@ -53,11 +53,3 @@ const (
 	// Boolean - the feature-variable type is boolean
 	Boolean VariableType = "boolean"
 )
-
-// UnsafeFeatureDecisionInfo represents response for GetDetailedFeatureDecisionUnsafe api
-type UnsafeFeatureDecisionInfo struct {
-	Enabled       bool
-	VariableMap   map[string]interface{}
-	ExperimentKey string
-	VariationKey  string
-}

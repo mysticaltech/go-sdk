@@ -36,6 +36,14 @@ type FeatureDecisionContext struct {
 	Variable      entities.Variable
 }
 
+// UnsafeFeatureDecisionInfo represents response for GetDetailedFeatureDecisionUnsafe api
+type UnsafeFeatureDecisionInfo struct {
+	Enabled       bool
+	VariableMap   map[string]interface{}
+	ExperimentKey string
+	VariationKey  string
+}
+
 // Source is where the decision came from
 type Source string
 
