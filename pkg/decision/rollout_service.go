@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -53,7 +53,9 @@ func (r RolloutService) GetDecision(decisionContext FeatureDecisionContext, user
 
 	evaluateConditionTree := func(experiment *entities.Experiment) bool {
 		condTreeParams := entities.NewTreeParameters(&userContext, decisionContext.ProjectConfig.GetAudienceMap())
+		r.logger.Debug(fmt.Sprintf(`Evaluating audiences for rule "%s".`, feature.Key))
 		evalResult, _ := r.audienceTreeEvaluator.Evaluate(experiment.AudienceConditionTree, condTreeParams)
+		r.logger.Info(fmt.Sprintf(`Audiences for rule "%s" collectively evaluated to "%t"`, feature.Key, evalResult))
 		if !evalResult {
 			featureDecision.Reason = reasons.FailedRolloutTargeting
 			r.logger.Debug(fmt.Sprintf(`User "%s" failed targeting for feature rollout with key "%s".`, userContext.ID, feature.Key))

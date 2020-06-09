@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -35,14 +35,34 @@ func (m *MockBucketer) Bucket(bucketingID string, experiment entities.Experiment
 	return args.Get(0).(*entities.Variation), args.Get(1).(reasons.Reason), args.Error(2)
 }
 
+type MockLogger struct {
+	mock.Mock
+}
+
+func (m *MockLogger) Debug(message string) {
+	m.Called(message)
+}
+
+func (m *MockLogger) Info(message string) {
+	m.Called(message)
+}
+
+func (m *MockLogger) Warning(message string) {
+}
+
+func (m *MockLogger) Error(message string, err interface{}) {
+}
+
 type ExperimentBucketerTestSuite struct {
 	suite.Suite
 	mockBucketer *MockBucketer
+	mockLogger   *MockLogger
 	mockConfig   *mockProjectConfig
 }
 
 func (s *ExperimentBucketerTestSuite) SetupTest() {
 	s.mockBucketer = new(MockBucketer)
+	s.mockLogger = new(MockLogger)
 	s.mockConfig = new(mockProjectConfig)
 }
 
@@ -66,6 +86,7 @@ func (s *ExperimentBucketerTestSuite) TestGetDecisionNoTargeting() {
 
 	experimentBucketerService := ExperimentBucketerService{
 		bucketer: s.mockBucketer,
+		logger:   s.mockLogger,
 	}
 	decision, err := experimentBucketerService.GetDecision(testDecisionContext, testUserContext)
 	s.Equal(expectedDecision, decision)
@@ -84,12 +105,15 @@ func (s *ExperimentBucketerTestSuite) TestGetDecisionWithTargetingPasses() {
 		},
 	}
 	s.mockBucketer.On("Bucket", testUserContext.ID, testTargetedExp1116, entities.Group{}).Return(&testTargetedExp1116Var2228, reasons.BucketedIntoVariation, nil)
+	s.mockLogger.On("Debug", `Evaluating audiences for experiment "test_targeted_experiment_1116".`)
+	s.mockLogger.On("Info", `Audiences for experiment "test_targeted_experiment_1116" collectively evaluated to "true"`)
 
 	mockAudienceTreeEvaluator := new(MockAudienceTreeEvaluator)
 	mockAudienceTreeEvaluator.On("Evaluate", mock.Anything, mock.Anything).Return(true, true)
 	experimentBucketerService := ExperimentBucketerService{
 		audienceTreeEvaluator: mockAudienceTreeEvaluator,
 		bucketer:              s.mockBucketer,
+		logger:                s.mockLogger,
 	}
 	s.mockConfig.On("GetAudienceMap").Return(map[string]entities.Audience{})
 
@@ -100,6 +124,7 @@ func (s *ExperimentBucketerTestSuite) TestGetDecisionWithTargetingPasses() {
 	decision, err := experimentBucketerService.GetDecision(testDecisionContext, testUserContext)
 	s.Equal(expectedDecision, decision)
 	s.NoError(err)
+	s.mockLogger.AssertExpectations(s.T())
 }
 
 func (s *ExperimentBucketerTestSuite) TestGetDecisionWithTargetingFails() {
@@ -114,9 +139,13 @@ func (s *ExperimentBucketerTestSuite) TestGetDecisionWithTargetingFails() {
 	}
 	mockAudienceTreeEvaluator := new(MockAudienceTreeEvaluator)
 	mockAudienceTreeEvaluator.On("Evaluate", mock.Anything, mock.Anything).Return(false, true)
+	s.mockLogger.On("Debug", `Evaluating audiences for experiment "test_targeted_experiment_1116".`)
+	s.mockLogger.On("Info", `Audiences for experiment "test_targeted_experiment_1116" collectively evaluated to "false"`)
+
 	experimentBucketerService := ExperimentBucketerService{
 		audienceTreeEvaluator: mockAudienceTreeEvaluator,
 		bucketer:              s.mockBucketer,
+		logger:                s.mockLogger,
 	}
 	s.mockConfig.On("GetAudienceMap").Return(map[string]entities.Audience{})
 
@@ -128,6 +157,7 @@ func (s *ExperimentBucketerTestSuite) TestGetDecisionWithTargetingFails() {
 	s.Equal(expectedDecision, decision)
 	s.NoError(err)
 	s.mockBucketer.AssertNotCalled(s.T(), "Bucket")
+	s.mockLogger.AssertExpectations(s.T())
 }
 
 func TestExperimentBucketerTestSuite(t *testing.T) {

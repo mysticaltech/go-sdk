@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -38,7 +38,7 @@ type ExperimentBucketerService struct {
 func NewExperimentBucketerService(logger logging.OptimizelyLogProducer) *ExperimentBucketerService {
 	// @TODO(mng): add experiment override service
 	return &ExperimentBucketerService{
-		logger:logger,
+		logger:                logger,
 		audienceTreeEvaluator: evaluator.NewMixedTreeEvaluator(),
 		bucketer:              *bucketer.NewMurmurhashExperimentBucketer(logger, bucketer.DefaultHashSeed),
 	}
@@ -52,7 +52,10 @@ func (s ExperimentBucketerService) GetDecision(decisionContext ExperimentDecisio
 	// Determine if user can be part of the experiment
 	if experiment.AudienceConditionTree != nil {
 		condTreeParams := entities.NewTreeParameters(&userContext, decisionContext.ProjectConfig.GetAudienceMap())
+		s.logger.Debug(fmt.Sprintf(`Evaluating audiences for experiment "%s".`, experiment.Key))
 		evalResult, _ := s.audienceTreeEvaluator.Evaluate(experiment.AudienceConditionTree, condTreeParams)
+		s.logger.Info(fmt.Sprintf(`Audiences for experiment "%s" collectively evaluated to "%t"`, experiment.Key, evalResult))
+
 		if !evalResult {
 			experimentDecision.Reason = reasons.FailedAudienceTargeting
 			return experimentDecision, nil

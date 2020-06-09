@@ -31,6 +31,7 @@ import (
 type RolloutServiceTestSuite struct {
 	suite.Suite
 	mockConfig                        *mockProjectConfig
+	mockLogger                        *MockLogger
 	mockAudienceTreeEvaluator         *MockAudienceTreeEvaluator
 	mockExperimentService             *MockExperimentDecisionService
 	testExperiment1112DecisionContext ExperimentDecisionContext
@@ -41,6 +42,7 @@ type RolloutServiceTestSuite struct {
 
 func (s *RolloutServiceTestSuite) SetupTest() {
 	s.mockConfig = new(mockProjectConfig)
+	s.mockLogger = new(MockLogger)
 	s.mockAudienceTreeEvaluator = new(MockAudienceTreeEvaluator)
 	s.mockExperimentService = new(MockExperimentDecisionService)
 	s.testExperiment1112DecisionContext = ExperimentDecisionContext{
@@ -106,11 +108,14 @@ func (s *RolloutServiceTestSuite) TestGetDecisionHappyPath() {
 	}
 	s.mockAudienceTreeEvaluator.On("Evaluate", testExp1112.AudienceConditionTree, s.testConditionTreeParams).Return(true, true)
 	s.mockExperimentService.On("GetDecision", s.testExperiment1112DecisionContext, s.testUserContext).Return(testExperimentBucketerDecision, nil)
+	s.mockLogger.On("Debug", `Evaluating audiences for rule "test_feature_rollout_3334_key".`)
+	s.mockLogger.On("Info", `Audiences for rule "test_feature_rollout_3334_key" collectively evaluated to "true"`)
+	s.mockLogger.On("Debug", `Decision made for user "test_user" for feature rollout with key "test_feature_rollout_3334_key": Bucketed into feature rollout.`)
 
 	testRolloutService := RolloutService{
 		audienceTreeEvaluator:     s.mockAudienceTreeEvaluator,
 		experimentBucketerService: s.mockExperimentService,
-		logger:                    logging.GetLogger("sdkKey", "RolloutService"),
+		logger:                    s.mockLogger,
 	}
 	expectedFeatureDecision := FeatureDecision{
 		Experiment: testExp1112,
@@ -122,6 +127,7 @@ func (s *RolloutServiceTestSuite) TestGetDecisionHappyPath() {
 	s.Equal(expectedFeatureDecision, decision)
 	s.mockAudienceTreeEvaluator.AssertExpectations(s.T())
 	s.mockExperimentService.AssertExpectations(s.T())
+	s.mockLogger.AssertExpectations(s.T())
 }
 
 func (s *RolloutServiceTestSuite) TestGetDecisionFallbacksToLastWhenFailsBucketing() {
@@ -142,11 +148,13 @@ func (s *RolloutServiceTestSuite) TestGetDecisionFallbacksToLastWhenFailsBucketi
 	s.mockAudienceTreeEvaluator.On("Evaluate", testExp1118.AudienceConditionTree, s.testConditionTreeParams).Return(true, true)
 	s.mockExperimentService.On("GetDecision", s.testExperiment1112DecisionContext, s.testUserContext).Return(testExperiment1112BucketerDecision, nil)
 	s.mockExperimentService.On("GetDecision", experiment1118DecisionContext, s.testUserContext).Return(testExperiment1118BucketerDecision, nil)
-
+	s.mockLogger.On("Debug", `Evaluating audiences for rule "test_feature_rollout_3334_key".`)
+	s.mockLogger.On("Info", `Audiences for rule "test_feature_rollout_3334_key" collectively evaluated to "true"`)
+	s.mockLogger.On("Debug", `Decision made for user "test_user" for feature rollout with key "test_feature_rollout_3334_key": Bucketed into feature rollout.`)
 	testRolloutService := RolloutService{
 		audienceTreeEvaluator:     s.mockAudienceTreeEvaluator,
 		experimentBucketerService: s.mockExperimentService,
-		logger:                    logging.GetLogger("sdkKey", "RolloutService"),
+		logger:                    s.mockLogger,
 	}
 	expectedFeatureDecision := FeatureDecision{
 		Experiment: testExp1118,
@@ -158,6 +166,7 @@ func (s *RolloutServiceTestSuite) TestGetDecisionFallbacksToLastWhenFailsBucketi
 	s.Equal(expectedFeatureDecision, decision)
 	s.mockAudienceTreeEvaluator.AssertExpectations(s.T())
 	s.mockExperimentService.AssertExpectations(s.T())
+	s.mockLogger.AssertExpectations(s.T())
 }
 
 func (s *RolloutServiceTestSuite) TestGetDecisionWhenFallbackBucketingFails() {
@@ -174,11 +183,14 @@ func (s *RolloutServiceTestSuite) TestGetDecisionWhenFallbackBucketingFails() {
 	s.mockAudienceTreeEvaluator.On("Evaluate", testExp1118.AudienceConditionTree, s.testConditionTreeParams).Return(true, true)
 	s.mockExperimentService.On("GetDecision", s.testExperiment1112DecisionContext, s.testUserContext).Return(testExperiment1112BucketerDecision, nil)
 	s.mockExperimentService.On("GetDecision", testExperiment1118DecisionContext, s.testUserContext).Return(testExperiment1112BucketerDecision, nil)
+	s.mockLogger.On("Debug", `Evaluating audiences for rule "test_feature_rollout_3334_key".`)
+	s.mockLogger.On("Info", `Audiences for rule "test_feature_rollout_3334_key" collectively evaluated to "true"`)
+	s.mockLogger.On("Debug", `Decision made for user "test_user" for feature rollout with key "test_feature_rollout_3334_key": Not bucketed into rollout.`)
 
 	testRolloutService := RolloutService{
 		audienceTreeEvaluator:     s.mockAudienceTreeEvaluator,
 		experimentBucketerService: s.mockExperimentService,
-		logger:                    logging.GetLogger("sdkKey", "RolloutService"),
+		logger:                    s.mockLogger,
 	}
 	expectedFeatureDecision := FeatureDecision{
 		Experiment: testExp1118,
@@ -189,6 +201,7 @@ func (s *RolloutServiceTestSuite) TestGetDecisionWhenFallbackBucketingFails() {
 	s.Equal(expectedFeatureDecision, decision)
 	s.mockAudienceTreeEvaluator.AssertExpectations(s.T())
 	s.mockExperimentService.AssertExpectations(s.T())
+	s.mockLogger.AssertExpectations(s.T())
 }
 
 func (s *RolloutServiceTestSuite) TestEvaluatesNextIfPreviousTargetingFails() {
@@ -203,11 +216,16 @@ func (s *RolloutServiceTestSuite) TestEvaluatesNextIfPreviousTargetingFails() {
 		Decision:  Decision{Reason: reasons.BucketedIntoVariation},
 	}
 	s.mockExperimentService.On("GetDecision", experiment1117DecisionContext, s.testUserContext).Return(testExperimentBucketerDecision, nil)
+	s.mockLogger.On("Debug", `Evaluating audiences for rule "test_feature_rollout_3334_key".`)
+	s.mockLogger.On("Info", `Audiences for rule "test_feature_rollout_3334_key" collectively evaluated to "false"`)
+	s.mockLogger.On("Info", `Audiences for rule "test_feature_rollout_3334_key" collectively evaluated to "true"`)
+	s.mockLogger.On("Debug", `User "test_user" failed targeting for feature rollout with key "test_feature_rollout_3334_key".`)
+	s.mockLogger.On("Debug", `Decision made for user "test_user" for feature rollout with key "test_feature_rollout_3334_key": Bucketed into feature rollout.`)
 
 	testRolloutService := RolloutService{
 		audienceTreeEvaluator:     s.mockAudienceTreeEvaluator,
 		experimentBucketerService: s.mockExperimentService,
-		logger:                    logging.GetLogger("sdkKey", "RolloutService"),
+		logger:                    s.mockLogger,
 	}
 	expectedFeatureDecision := FeatureDecision{
 		Experiment: testExp1117,
@@ -219,16 +237,21 @@ func (s *RolloutServiceTestSuite) TestEvaluatesNextIfPreviousTargetingFails() {
 	s.Equal(expectedFeatureDecision, decision)
 	s.mockAudienceTreeEvaluator.AssertExpectations(s.T())
 	s.mockExperimentService.AssertExpectations(s.T())
+	s.mockLogger.AssertExpectations(s.T())
 }
 
 func (s *RolloutServiceTestSuite) TestGetDecisionFailsTargeting() {
 	s.mockAudienceTreeEvaluator.On("Evaluate", testExp1112.AudienceConditionTree, s.testConditionTreeParams).Return(false, true)
 	s.mockAudienceTreeEvaluator.On("Evaluate", testExp1117.AudienceConditionTree, s.testConditionTreeParams).Return(false, true)
 	s.mockAudienceTreeEvaluator.On("Evaluate", testExp1118.AudienceConditionTree, s.testConditionTreeParams).Return(false, true)
+	s.mockLogger.On("Debug", `Evaluating audiences for rule "test_feature_rollout_3334_key".`)
+	s.mockLogger.On("Info", `Audiences for rule "test_feature_rollout_3334_key" collectively evaluated to "false"`)
+	s.mockLogger.On("Debug", `User "test_user" failed targeting for feature rollout with key "test_feature_rollout_3334_key".`)
+
 	testRolloutService := RolloutService{
 		audienceTreeEvaluator:     s.mockAudienceTreeEvaluator,
 		experimentBucketerService: s.mockExperimentService,
-		logger:                    logging.GetLogger("sdkKey", "RolloutService"),
+		logger:                    s.mockLogger,
 	}
 	expectedFeatureDecision := FeatureDecision{
 		Decision: Decision{
@@ -240,6 +263,7 @@ func (s *RolloutServiceTestSuite) TestGetDecisionFailsTargeting() {
 	s.Equal(expectedFeatureDecision, decision)
 	s.mockAudienceTreeEvaluator.AssertExpectations(s.T())
 	s.mockExperimentService.AssertExpectations(s.T())
+	s.mockLogger.AssertExpectations(s.T())
 }
 
 func TestNewRolloutService(t *testing.T) {
