@@ -49,6 +49,10 @@ func (m *MockLogger) Info(message string) {
 	m.Called(message)
 }
 
+func (m *MockLogger) Infof(message string, args ...interface{}) {
+	m.Called(message, args)
+}
+
 func (m *MockLogger) Warning(message string) {
 	m.Called(message)
 }
@@ -87,7 +91,7 @@ func (s *ExperimentBucketerTestSuite) TestGetDecisionNoTargeting() {
 		ProjectConfig: s.mockConfig,
 	}
 	s.mockBucketer.On("Bucket", testUserContext.ID, testExp1111, entities.Group{}).Return(&testExp1111Var2222, reasons.BucketedIntoVariation, nil)
-	s.mockLogger.On("Info", fmt.Sprintf(logging.ExperimentAudiencesEvaluatedTo.String(), "test_experiment_1111", true))
+	s.mockLogger.On("Infof", logging.ExperimentAudiencesEvaluatedTo.String(), []interface{}{"test_experiment_1111", true})
 	experimentBucketerService := ExperimentBucketerService{
 		bucketer: s.mockBucketer,
 		logger:   s.mockLogger,
@@ -120,7 +124,7 @@ func (s *ExperimentBucketerTestSuite) TestGetDecisionWithTargetingPasses() {
 	}
 	s.mockConfig.On("GetAudienceMap").Return(map[string]entities.Audience{})
 	s.mockLogger.On("Debug", fmt.Sprintf(logging.EvaluatingAudiencesForExperiment.String(), "test_targeted_experiment_1116"))
-	s.mockLogger.On("Info", fmt.Sprintf(logging.ExperimentAudiencesEvaluatedTo.String(), "test_targeted_experiment_1116", true))
+	s.mockLogger.On("Infof", logging.ExperimentAudiencesEvaluatedTo.String(), []interface{}{"test_targeted_experiment_1116", true})
 
 	testDecisionContext := ExperimentDecisionContext{
 		Experiment:    &testTargetedExp1116,
@@ -151,8 +155,8 @@ func (s *ExperimentBucketerTestSuite) TestGetDecisionWithTargetingFails() {
 	}
 	s.mockConfig.On("GetAudienceMap").Return(map[string]entities.Audience{})
 	s.mockLogger.On("Debug", fmt.Sprintf(logging.EvaluatingAudiencesForExperiment.String(), "test_targeted_experiment_1116"))
-	s.mockLogger.On("Info", fmt.Sprintf(logging.ExperimentAudiencesEvaluatedTo.String(), "test_targeted_experiment_1116", false))
-	s.mockLogger.On("Info", fmt.Sprintf(logging.UserNotInExperiment.String(), "test_user_1", "test_targeted_experiment_1116"))
+	s.mockLogger.On("Infof", logging.ExperimentAudiencesEvaluatedTo.String(), []interface{}{"test_targeted_experiment_1116", false})
+	s.mockLogger.On("Infof", logging.UserNotInExperiment.String(), []interface{}{"test_user_1", "test_targeted_experiment_1116"})
 
 	testDecisionContext := ExperimentDecisionContext{
 		Experiment:    &testTargetedExp1116,

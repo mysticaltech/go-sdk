@@ -116,9 +116,9 @@ func (o *OptimizelyClient) IsFeatureEnabled(featureKey string, userContext entit
 	}
 
 	if result {
-		o.logger.Info(fmt.Sprintf(`Feature "%s" is enabled for user "%s".`, featureKey, userContext.ID))
+		o.logger.Infof(`Feature "%s" is enabled for user "%s".`, featureKey, userContext.ID)
 	} else {
-		o.logger.Info(fmt.Sprintf(`Feature "%s" is not enabled for user "%s".`, featureKey, userContext.ID))
+		o.logger.Infof(`Feature "%s" is not enabled for user "%s".`, featureKey, userContext.ID)
 	}
 
 	if o.notificationCenter != nil {
@@ -683,9 +683,9 @@ func (o *OptimizelyClient) getExperimentDecision(experimentKey string, userConte
 
 	if experimentDecision.Variation != nil {
 		result := experimentDecision.Variation.Key
-		o.logger.Info(fmt.Sprintf(`User "%s" is bucketed into variation "%s" of experiment "%s".`, userContext.ID, result, experimentKey))
+		o.logger.Infof(`User "%s" is bucketed into variation "%s" of experiment "%s".`, userContext.ID, result, experimentKey)
 	} else {
-		o.logger.Info(fmt.Sprintf(`User "%s" is not bucketed into any variation for experiment "%s": %s.`, userContext.ID, experimentKey, experimentDecision.Reason))
+		o.logger.Infof(`User "%s" is not bucketed into any variation for experiment "%s": %s.`, userContext.ID, experimentKey, experimentDecision.Reason)
 	}
 
 	return decisionContext, experimentDecision, err

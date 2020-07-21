@@ -54,14 +54,14 @@ func (s ExperimentBucketerService) GetDecision(decisionContext ExperimentDecisio
 		condTreeParams := entities.NewTreeParameters(&userContext, decisionContext.ProjectConfig.GetAudienceMap())
 		s.logger.Debug(fmt.Sprintf(logging.EvaluatingAudiencesForExperiment.String(), experiment.Key))
 		evalResult, _ := s.audienceTreeEvaluator.Evaluate(experiment.AudienceConditionTree, condTreeParams)
-		s.logger.Info(fmt.Sprintf(logging.ExperimentAudiencesEvaluatedTo.String(), experiment.Key, evalResult))
+		s.logger.Infof(logging.ExperimentAudiencesEvaluatedTo.String(), experiment.Key, evalResult)
 		if !evalResult {
-			s.logger.Info(fmt.Sprintf(logging.UserNotInExperiment.String(), userContext.ID, experiment.Key))
+			s.logger.Infof(logging.UserNotInExperiment.String(), userContext.ID, experiment.Key)
 			experimentDecision.Reason = reasons.FailedAudienceTargeting
 			return experimentDecision, nil
 		}
 	} else {
-		s.logger.Info(fmt.Sprintf(logging.ExperimentAudiencesEvaluatedTo.String(), experiment.Key, true))
+		s.logger.Infof(logging.ExperimentAudiencesEvaluatedTo.String(), experiment.Key, true)
 	}
 
 	var group entities.Group

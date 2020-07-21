@@ -27,6 +27,7 @@ type OptimizelyLogConsumer interface {
 type OptimizelyLogProducer interface {
 	Debug(message string)
 	Info(message string)
+	Infof(message string, args ...interface{})
 	Warning(message string)
 	Error(message string, err interface{})
 }

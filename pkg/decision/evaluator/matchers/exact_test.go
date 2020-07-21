@@ -39,6 +39,10 @@ func (m *MockLogger) Info(message string) {
 	m.Called(message)
 }
 
+func (m *MockLogger) Infof(message string, args ...interface{}) {
+	m.Called(message, args)
+}
+
 func (m *MockLogger) Warning(message string) {
 	m.Called(message)
 }

@@ -126,6 +126,11 @@ func (p NamedLogProducer) Info(message string) {
 	p.log(LogLevelInfo, message)
 }
 
+// Infof formats the given message with arguments and logs with a INFO level
+func (p NamedLogProducer) Infof(message string, args ...interface{}) {
+	p.log(LogLevelInfo, fmt.Sprintf(message, args...))
+}
+
 // Warning logs the given message with a WARNING level
 func (p NamedLogProducer) Warning(message string) {
 	p.log(LogLevelWarning, message)
