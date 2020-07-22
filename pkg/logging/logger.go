@@ -158,7 +158,7 @@ func (p NamedLogProducer) Error(message string, err interface{}) {
 func (p NamedLogProducer) Errorf(message string, err interface{}, args ...interface{}) {
 	message = fmt.Sprintf(message, args...)
 	if err != nil {
-		message = message + ": %v"
+		message += ": %v"
 		args = append(args, err)
 	}
 	p.logf(LogLevelError, message, args...)
