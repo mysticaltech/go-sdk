@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -19,6 +19,7 @@ package logging
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -34,6 +35,11 @@ type MockOptimizelyLogger struct {
 func (m *MockOptimizelyLogger) Log(level LogLevel, message string, fields map[string]interface{}) {
 	m.Called(level, message, fields["name"])
 	m.loggedMessages = append(m.loggedMessages, message)
+}
+
+func (m *MockOptimizelyLogger) Logf(level LogLevel, message string, fields map[string]interface{}, args ...interface{}) {
+	m.Called(level, message, fields["name"], args)
+	m.loggedMessages = append(m.loggedMessages, fmt.Sprintf(message, args))
 }
 
 func (m *MockOptimizelyLogger) SetLogLevel(level LogLevel) {
@@ -52,6 +58,21 @@ func TestNamedLoggerDebug(t *testing.T) {
 	logProducer.Debug(testLogMessage)
 	testLogger.AssertExpectations(t)
 	assert.Equal(t, []string{testLogMessage}, testLogger.loggedMessages)
+}
+
+func TestNamedLoggerDebugF(t *testing.T) {
+	testLogMessage := "Test debug message %s"
+	args := []interface{}{"123"}
+	testLogName := "test-debugf"
+	testLogger := new(MockOptimizelyLogger)
+	testLogger.On("Logf", LogLevelDebug, testLogMessage, testLogName, args)
+
+	SetLogger(testLogger)
+
+	logProducer := GetLogger("", testLogName)
+	logProducer.Debugf(testLogMessage, "123")
+	testLogger.AssertExpectations(t)
+	assert.Equal(t, []string{fmt.Sprintf(testLogMessage, args)}, testLogger.loggedMessages)
 }
 
 func TestNamedLoggerInfo(t *testing.T) {
@@ -80,6 +101,21 @@ func TestNamedLoggerWarning(t *testing.T) {
 	logProducer.Warning(testLogMessage)
 	testLogger.AssertExpectations(t)
 	assert.Equal(t, []string{testLogMessage}, testLogger.loggedMessages)
+}
+
+func TestNamedLoggerWarningf(t *testing.T) {
+	testLogMessage := "Test warn message %s"
+	args := []interface{}{"123"}
+	testLogName := "test-warn"
+	testLogger := new(MockOptimizelyLogger)
+	testLogger.On("Logf", LogLevelWarning, testLogMessage, testLogName, args)
+
+	SetLogger(testLogger)
+
+	logProducer := GetLogger("testSdkKey", testLogName)
+	logProducer.Warningf(testLogMessage, "123")
+	testLogger.AssertExpectations(t)
+	assert.Equal(t, []string{fmt.Sprintf(testLogMessage, args)}, testLogger.loggedMessages)
 }
 
 func TestNamedLoggerError(t *testing.T) {

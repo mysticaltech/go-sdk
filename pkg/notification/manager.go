@@ -18,7 +18,6 @@
 package notification
 
 import (
-	"fmt"
 	"sync"
 	"sync/atomic"
 
@@ -43,7 +42,7 @@ type AtomicManager struct {
 // NewAtomicManager creates a new instance of the atomic manager
 func NewAtomicManager(logger logging.OptimizelyLogProducer) *AtomicManager {
 	return &AtomicManager{
-		logger: logger,
+		logger:   logger,
 		handlers: make(map[uint32]func(interface{})),
 	}
 }
@@ -68,7 +67,7 @@ func (am *AtomicManager) Remove(id int) {
 		delete(am.handlers, handlerID)
 		return
 	}
-	am.logger.Debug(fmt.Sprintf("Handler for id:%d not found", id))
+	am.logger.Debugf("Handler for id:%d not found", id)
 
 }
 

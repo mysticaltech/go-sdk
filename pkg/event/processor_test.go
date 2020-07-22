@@ -489,6 +489,9 @@ type NoOpLogger struct {
 func (l *NoOpLogger) Log(level logging.LogLevel, message string, fields map[string]interface{}) {
 }
 
+func (l *NoOpLogger) Logf(level logging.LogLevel, message string, fields map[string]interface{}, args ...interface{}) {
+}
+
 func (l *NoOpLogger) SetLogLevel(level logging.LogLevel) {
 
 }

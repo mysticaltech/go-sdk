@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -18,7 +18,6 @@
 package decision
 
 import (
-	"fmt"
 	"github.com/optimizely/go-sdk/pkg/entities"
 	"github.com/optimizely/go-sdk/pkg/logging"
 )
@@ -54,7 +53,7 @@ func NewCompositeExperimentService(sdkKey string, options ...CESOptionFunc) *Com
 	// 1. Overrides (if supplied)
 	// 2. Whitelist
 	// 3. Bucketing (with User profile integration if supplied)
-	compositeExperimentService := &CompositeExperimentService{logger:logging.GetLogger(sdkKey, "CompositeExperimentService")}
+	compositeExperimentService := &CompositeExperimentService{logger: logging.GetLogger(sdkKey, "CompositeExperimentService")}
 	for _, opt := range options {
 		opt(compositeExperimentService)
 	}
@@ -87,7 +86,7 @@ func (s CompositeExperimentService) GetDecision(decisionContext ExperimentDecisi
 	for _, experimentService := range s.experimentServices {
 		decision, err = experimentService.GetDecision(decisionContext, userContext)
 		if err != nil {
-			s.logger.Debug(fmt.Sprintf("%v", err))
+			s.logger.Debugf("%v", err)
 		}
 		if decision.Variation != nil && err == nil {
 			return decision, err

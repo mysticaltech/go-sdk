@@ -17,7 +17,6 @@
 package matchers
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -94,7 +93,7 @@ func (s *GtTestSuite) TestGtMatcherInt() {
 			"int_43": 42,
 		},
 	}
-	s.mockLogger.On("Debug", fmt.Sprintf(logging.NullUserAttribute.String(), "", "int_42"))
+	s.mockLogger.On("Debugf", logging.NullUserAttribute.String(), []interface{}{"", "int_42"})
 	_, err = matcher.Match(user)
 	s.Error(err)
 
@@ -104,7 +103,7 @@ func (s *GtTestSuite) TestGtMatcherInt() {
 			"int_42": true,
 		},
 	}
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.InvalidAttributeValueType.String(), "", true, "int_42"))
+	s.mockLogger.On("Warningf", logging.InvalidAttributeValueType.String(), []interface{}{"", true, "int_42"})
 	result, err = matcher.Match(user)
 	s.Error(err)
 	s.False(result)
@@ -159,7 +158,7 @@ func (s *GtTestSuite) TestGtMatcherFloat() {
 		},
 	}
 
-	s.mockLogger.On("Debug", fmt.Sprintf(logging.NullUserAttribute.String(), "", "float_4_2"))
+	s.mockLogger.On("Debugf", logging.NullUserAttribute.String(), []interface{}{"", "float_4_2"})
 	_, err = matcher.Match(user)
 	s.Error(err)
 
@@ -169,7 +168,7 @@ func (s *GtTestSuite) TestGtMatcherFloat() {
 			"float_4_2": true,
 		},
 	}
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.InvalidAttributeValueType.String(), "", true, "float_4_2"))
+	s.mockLogger.On("Warningf", logging.InvalidAttributeValueType.String(), []interface{}{"", true, "float_4_2"})
 	result, err = matcher.Match(user)
 	s.Error(err)
 	s.False(result)
@@ -192,7 +191,7 @@ func (s *GtTestSuite) TestGtMatcherUnsupportedConditionValue() {
 			"float_4_2": 4.2,
 		},
 	}
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.UnsupportedConditionValue.String(), ""))
+	s.mockLogger.On("Warningf", logging.UnsupportedConditionValue.String(), []interface{}{""})
 	result, err := matcher.Match(user)
 	s.Error(err)
 	s.False(result)

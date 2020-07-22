@@ -341,7 +341,7 @@ func (p *BatchEventProcessor) OnEventDispatch(callback func(logEvent LogEvent)) 
 		if ev, ok := payload.(LogEvent); ok {
 			callback(ev)
 		} else {
-			p.logger.Warning(fmt.Sprintf("Unable to convert notification payload %v into LogEventNotification", payload))
+			p.logger.Warningf("Unable to convert notification payload %v into LogEventNotification", payload)
 		}
 	}
 	id, err := notificationCenter.AddHandler(notification.LogEvent, handler)

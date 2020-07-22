@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -18,8 +18,6 @@
 package decision
 
 import (
-	"fmt"
-
 	"github.com/optimizely/go-sdk/pkg/entities"
 	"github.com/optimizely/go-sdk/pkg/logging"
 )
@@ -27,13 +25,13 @@ import (
 // CompositeFeatureService is the default out-of-the-box feature decision service
 type CompositeFeatureService struct {
 	featureServices []FeatureService
-	logger logging.OptimizelyLogProducer
+	logger          logging.OptimizelyLogProducer
 }
 
 // NewCompositeFeatureService returns a new instance of the CompositeFeatureService
 func NewCompositeFeatureService(sdkKey string, compositeExperimentService ExperimentService) *CompositeFeatureService {
 	return &CompositeFeatureService{
-		logger:logging.GetLogger(sdkKey, "CompositeFeatureService"),
+		logger: logging.GetLogger(sdkKey, "CompositeFeatureService"),
 		featureServices: []FeatureService{
 			NewFeatureExperimentService(logging.GetLogger(sdkKey, "FeatureExperimentService"), compositeExperimentService),
 			NewRolloutService(sdkKey),
@@ -48,7 +46,7 @@ func (f CompositeFeatureService) GetDecision(decisionContext FeatureDecisionCont
 	for _, featureDecisionService := range f.featureServices {
 		featureDecision, err = featureDecisionService.GetDecision(decisionContext, userContext)
 		if err != nil {
-			f.logger.Debug(fmt.Sprintf("%v", err))
+			f.logger.Debugf("%v", err)
 		}
 
 		if featureDecision.Variation != nil && err == nil {

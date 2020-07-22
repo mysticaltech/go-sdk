@@ -17,7 +17,6 @@
 package matchers
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -74,7 +73,7 @@ func (s *SubstringTestSuite) TestSubstringMatcher() {
 		},
 	}
 
-	s.mockLogger.On("Debug", fmt.Sprintf(logging.NullUserAttribute.String(), "", "string_foo"))
+	s.mockLogger.On("Debugf", logging.NullUserAttribute.String(), []interface{}{"", "string_foo"})
 	_, err = matcher.Match(user)
 	s.Error(err)
 
@@ -84,7 +83,7 @@ func (s *SubstringTestSuite) TestSubstringMatcher() {
 			"string_foo": true,
 		},
 	}
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.InvalidAttributeValueType.String(), "", true, "string_foo"))
+	s.mockLogger.On("Warningf", logging.InvalidAttributeValueType.String(), []interface{}{"", true, "string_foo"})
 	result, err = matcher.Match(user)
 	s.Error(err)
 	s.False(result)
@@ -107,7 +106,7 @@ func (s *GtTestSuite) TestSubstringMatcherUnsupportedConditionValue() {
 			"string_foo": "foo",
 		},
 	}
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.UnsupportedConditionValue.String(), ""))
+	s.mockLogger.On("Warningf", logging.UnsupportedConditionValue.String(), []interface{}{""})
 	result, err := matcher.Match(user)
 	s.Error(err)
 	s.False(result)

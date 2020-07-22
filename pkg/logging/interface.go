@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -20,14 +20,18 @@ package logging
 // OptimizelyLogConsumer consumes log messages produced by the log producers
 type OptimizelyLogConsumer interface {
 	Log(level LogLevel, message string, fields map[string]interface{})
+	Logf(level LogLevel, message string, fields map[string]interface{}, args ...interface{})
 	SetLogLevel(logLevel LogLevel)
 }
 
 // OptimizelyLogProducer produces log messages to be consumed by the log consumer
 type OptimizelyLogProducer interface {
 	Debug(message string)
+	Debugf(message string, args ...interface{})
 	Info(message string)
 	Infof(message string, args ...interface{})
 	Warning(message string)
+	Warningf(message string, args ...interface{})
 	Error(message string, err interface{})
+	Errorf(message string, err interface{}, args ...interface{})
 }

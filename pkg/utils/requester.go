@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -21,11 +21,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/optimizely/go-sdk/pkg/logging"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/optimizely/go-sdk/pkg/logging"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -135,12 +136,12 @@ func (r HTTPRequester) Do(url, method string, body io.Reader, headers []Header) 
 	single := func(request *http.Request) (response []byte, responseHeaders http.Header, code int, e error) {
 		resp, doErr := r.client.Do(request)
 		if doErr != nil {
-			r.logger.Error(fmt.Sprintf("failed to send request %v", request), e)
+			r.logger.Errorf("failed to send request %v", e, request)
 			return nil, http.Header{}, 0, doErr
 		}
 		defer func() {
 			if e := resp.Body.Close(); e != nil {
-				r.logger.Warning(fmt.Sprintf("can't close body for %s request, %s", request.URL, e))
+				r.logger.Warningf("can't close body for %s request, %s", request.URL, e)
 			}
 		}()
 
@@ -150,17 +151,17 @@ func (r HTTPRequester) Do(url, method string, body io.Reader, headers []Header) 
 		}
 
 		if resp.StatusCode >= http.StatusBadRequest {
-			r.logger.Warning(fmt.Sprintf("error status code=%d", resp.StatusCode))
+			r.logger.Warningf("error status code=%d", resp.StatusCode)
 			return response, resp.Header, resp.StatusCode, errors.New(resp.Status)
 		}
 
 		return response, resp.Header, resp.StatusCode, nil
 	}
 
-	r.logger.Debug(fmt.Sprintf("request %s", url))
+	r.logger.Debugf("request %s", url)
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		r.logger.Error(fmt.Sprintf("failed to make request %s", url), err)
+		r.logger.Errorf("failed to make request %s", err, url)
 		return nil, nil, 0, err
 	}
 
@@ -173,10 +174,10 @@ func (r HTTPRequester) Do(url, method string, body io.Reader, headers []Header) 
 			if i > 0 {
 				triedMsg = fmt.Sprintf(", tried %d time(s)", i+1)
 			}
-			r.logger.Debug(fmt.Sprintf("completed %s%s", url, triedMsg))
+			r.logger.Debugf("completed %s%s", url, triedMsg)
 			return response, responseHeaders, code, err
 		}
-		r.logger.Debug(fmt.Sprintf("failed %s with %v", url, err))
+		r.logger.Debugf("failed %s with %v", url, err)
 
 		if i != r.retries {
 			delay := time.Duration(500) * time.Millisecond

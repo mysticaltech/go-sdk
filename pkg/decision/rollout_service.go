@@ -18,7 +18,6 @@
 package decision
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/optimizely/go-sdk/pkg/decision/evaluator"
@@ -55,7 +54,7 @@ func (r RolloutService) GetDecision(decisionContext FeatureDecisionContext, user
 
 	evaluateConditionTree := func(experiment *entities.Experiment, loggingKey string) bool {
 		condTreeParams := entities.NewTreeParameters(&userContext, decisionContext.ProjectConfig.GetAudienceMap())
-		r.logger.Debug(fmt.Sprintf(logging.EvaluatingAudiencesForRollout.String(), loggingKey))
+		r.logger.Debugf(logging.EvaluatingAudiencesForRollout.String(), loggingKey)
 		evalResult, _ := r.audienceTreeEvaluator.Evaluate(experiment.AudienceConditionTree, condTreeParams)
 		if !evalResult {
 			featureDecision.Reason = reasons.FailedRolloutTargeting
@@ -76,7 +75,7 @@ func (r RolloutService) GetDecision(decisionContext FeatureDecisionContext, user
 
 		featureDecision.Experiment = *experiment
 		featureDecision.Variation = decision.Variation
-		r.logger.Debug(fmt.Sprintf(`Decision made for user "%s" for feature rollout with key "%s": %s.`, userContext.ID, feature.Key, featureDecision.Reason))
+		r.logger.Debugf(`Decision made for user "%s" for feature rollout with key "%s": %s.`, userContext.ID, feature.Key, featureDecision.Reason)
 		return featureDecision, nil
 	}
 
@@ -107,7 +106,7 @@ func (r RolloutService) GetDecision(decisionContext FeatureDecisionContext, user
 		evaluationResult := experiment.AudienceConditionTree == nil || evaluateConditionTree(experiment, loggingKey)
 		r.logger.Infof(logging.RolloutAudiencesEvaluatedTo.String(), loggingKey, evaluationResult)
 		if !evaluationResult {
-			r.logger.Debug(fmt.Sprintf(logging.UserNotInRollout.String(), userContext.ID, loggingKey))
+			r.logger.Debugf(logging.UserNotInRollout.String(), userContext.ID, loggingKey)
 			// Evaluate this user for the next rule
 			continue
 		}
@@ -131,7 +130,7 @@ func (r RolloutService) GetDecision(decisionContext FeatureDecisionContext, user
 		decision, err := r.experimentBucketerService.GetDecision(experimentDecisionContext, userContext)
 		if err == nil {
 
-			r.logger.Debug(fmt.Sprintf(logging.UserInEveryoneElse.String(), userContext.ID))
+			r.logger.Debugf(logging.UserInEveryoneElse.String(), userContext.ID)
 		}
 		return getFeatureDecision(experiment, &decision)
 	}

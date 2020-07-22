@@ -17,7 +17,6 @@
 package matchers
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -35,6 +34,10 @@ func (m *MockLogger) Debug(message string) {
 	m.Called(message)
 }
 
+func (m *MockLogger) Debugf(message string, args ...interface{}) {
+	m.Called(message, args)
+}
+
 func (m *MockLogger) Info(message string) {
 	m.Called(message)
 }
@@ -47,7 +50,15 @@ func (m *MockLogger) Warning(message string) {
 	m.Called(message)
 }
 
+func (m *MockLogger) Warningf(message string, args ...interface{}) {
+	m.Called(message, args)
+}
+
 func (m *MockLogger) Error(message string, err interface{}) {
+	m.Called(message, err)
+}
+
+func (m *MockLogger) Errorf(message string, err interface{}, args ...interface{}) {
 	m.Called(message, err)
 }
 
@@ -97,7 +108,7 @@ func (s *ExactTestSuite) TestExactMatcherString() {
 			"string_not_foo": "foo",
 		},
 	}
-	s.mockLogger.On("Debug", fmt.Sprintf(logging.NullUserAttribute.String(), "", "string_foo"))
+	s.mockLogger.On("Debugf", logging.NullUserAttribute.String(), []interface{}{"", "string_foo"})
 	_, err = matcher.Match(user)
 	s.Error(err)
 
@@ -107,7 +118,7 @@ func (s *ExactTestSuite) TestExactMatcherString() {
 			"string_foo": 121,
 		},
 	}
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.InvalidAttributeValueType.String(), "", 121, "string_foo"))
+	s.mockLogger.On("Warningf", logging.InvalidAttributeValueType.String(), []interface{}{"", 121, "string_foo"})
 	result, err = matcher.Match(user)
 	s.Error(err)
 	s.False(false)
@@ -152,7 +163,7 @@ func (s *ExactTestSuite) TestExactMatcherBool() {
 		},
 	}
 
-	s.mockLogger.On("Debug", fmt.Sprintf(logging.NullUserAttribute.String(), "", "bool_true"))
+	s.mockLogger.On("Debugf", logging.NullUserAttribute.String(), []interface{}{"", "bool_true"})
 	_, err = matcher.Match(user)
 	s.Error(err)
 
@@ -162,7 +173,7 @@ func (s *ExactTestSuite) TestExactMatcherBool() {
 			"bool_true": 121,
 		},
 	}
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.InvalidAttributeValueType.String(), "", 121, "bool_true"))
+	s.mockLogger.On("Warningf", logging.InvalidAttributeValueType.String(), []interface{}{"", 121, "bool_true"})
 	result, err = matcher.Match(user)
 	s.Error(err)
 	s.False(result)
@@ -217,7 +228,7 @@ func (s *ExactTestSuite) TestExactMatcherInt() {
 			"int_43": 42,
 		},
 	}
-	s.mockLogger.On("Debug", fmt.Sprintf(logging.NullUserAttribute.String(), "", "int_42"))
+	s.mockLogger.On("Debugf", logging.NullUserAttribute.String(), []interface{}{"", "int_42"})
 	_, err = matcher.Match(user)
 	s.Error(err)
 
@@ -227,7 +238,7 @@ func (s *ExactTestSuite) TestExactMatcherInt() {
 			"int_42": "test",
 		},
 	}
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.InvalidAttributeValueType.String(), "", "test", "int_42"))
+	s.mockLogger.On("Warningf", logging.InvalidAttributeValueType.String(), []interface{}{"", "test", "int_42"})
 	result, err = matcher.Match(user)
 	s.Error(err)
 	s.False(result)
@@ -271,7 +282,7 @@ func (s *ExactTestSuite) TestExactMatcherFloat() {
 			"float_4_3": 4.2,
 		},
 	}
-	s.mockLogger.On("Debug", fmt.Sprintf(logging.NullUserAttribute.String(), "", "float_4_2"))
+	s.mockLogger.On("Debugf", logging.NullUserAttribute.String(), []interface{}{"", "float_4_2"})
 	_, err = matcher.Match(user)
 	s.Error(err)
 
@@ -281,7 +292,7 @@ func (s *ExactTestSuite) TestExactMatcherFloat() {
 			"float_4_2": "test",
 		},
 	}
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.InvalidAttributeValueType.String(), "", "test", "float_4_2"))
+	s.mockLogger.On("Warningf", logging.InvalidAttributeValueType.String(), []interface{}{"", "test", "float_4_2"})
 	result, err = matcher.Match(user)
 	s.Error(err)
 	s.False(result)
@@ -304,7 +315,7 @@ func (s *ExactTestSuite) TestExactMatcherUnsupportedConditionValue() {
 			"int_42": 42,
 		},
 	}
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.UnsupportedConditionValue.String(), ""))
+	s.mockLogger.On("Warningf", logging.UnsupportedConditionValue.String(), []interface{}{""})
 	result, err := matcher.Match(user)
 	s.Error(err)
 	s.False(result)

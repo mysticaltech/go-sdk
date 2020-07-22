@@ -18,8 +18,6 @@
 package decision
 
 import (
-	"fmt"
-
 	"github.com/optimizely/go-sdk/pkg/decision/bucketer"
 	"github.com/optimizely/go-sdk/pkg/decision/evaluator"
 	"github.com/optimizely/go-sdk/pkg/decision/reasons"
@@ -52,7 +50,7 @@ func (s ExperimentBucketerService) GetDecision(decisionContext ExperimentDecisio
 	// Determine if user can be part of the experiment
 	if experiment.AudienceConditionTree != nil {
 		condTreeParams := entities.NewTreeParameters(&userContext, decisionContext.ProjectConfig.GetAudienceMap())
-		s.logger.Debug(fmt.Sprintf(logging.EvaluatingAudiencesForExperiment.String(), experiment.Key))
+		s.logger.Debugf(logging.EvaluatingAudiencesForExperiment.String(), experiment.Key)
 		evalResult, _ := s.audienceTreeEvaluator.Evaluate(experiment.AudienceConditionTree, condTreeParams)
 		s.logger.Infof(logging.ExperimentAudiencesEvaluatedTo.String(), experiment.Key, evalResult)
 		if !evalResult {
@@ -72,11 +70,11 @@ func (s ExperimentBucketerService) GetDecision(decisionContext ExperimentDecisio
 	// bucket user into a variation
 	bucketingID, err := userContext.GetBucketingID()
 	if err != nil {
-		s.logger.Debug(fmt.Sprintf(`Error computing bucketing ID for experiment "%s": "%s"`, experiment.Key, err.Error()))
+		s.logger.Debugf(`Error computing bucketing ID for experiment "%s": "%s"`, experiment.Key, err.Error())
 	}
 
 	if bucketingID != userContext.ID {
-		s.logger.Debug(fmt.Sprintf(`Using bucketing ID: "%s" for user "%s"`, bucketingID, userContext.ID))
+		s.logger.Debugf(`Using bucketing ID: "%s" for user "%s"`, bucketingID, userContext.ID)
 	}
 	// @TODO: handle error from bucketer
 	variation, reason, _ := s.bucketer.Bucket(bucketingID, *experiment, group)

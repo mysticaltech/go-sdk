@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -18,7 +18,6 @@
 package decision
 
 import (
-	"fmt"
 	"github.com/optimizely/go-sdk/pkg/entities"
 	"github.com/optimizely/go-sdk/pkg/logging"
 	"github.com/optimizely/go-sdk/pkg/notification"
@@ -107,7 +106,7 @@ func (s CompositeService) OnDecision(callback func(notification.DecisionNotifica
 		if decisionNotification, ok := payload.(notification.DecisionNotification); ok {
 			callback(decisionNotification)
 		} else {
-			s.logger.Warning(fmt.Sprintf("Unable to convert notification payload %v into DecisionNotification", payload))
+			s.logger.Warningf("Unable to convert notification payload %v into DecisionNotification", payload)
 		}
 	}
 	id, err := s.notificationCenter.AddHandler(notification.Decision, handler)

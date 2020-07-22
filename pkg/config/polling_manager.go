@@ -166,14 +166,14 @@ func (cm *PollingProjectConfigManager) SyncConfig() {
 		previousRevision = cm.projectConfig.GetRevision()
 	}
 	if projectConfig.GetRevision() == previousRevision {
-		cm.logger.Debug(fmt.Sprintf("No datafile updates. Current revision number: %s", cm.projectConfig.GetRevision()))
+		cm.logger.Debugf("No datafile updates. Current revision number: %s", cm.projectConfig.GetRevision())
 		closeMutex(nil)
 		return
 	}
 	err = cm.setConfig(projectConfig)
 	closeMutex(err)
 	if err == nil {
-		cm.logger.Debug(fmt.Sprintf("New datafile set with revision: %s. Old revision: %s", projectConfig.GetRevision(), previousRevision))
+		cm.logger.Debugf("New datafile set with revision: %s. Old revision: %s", projectConfig.GetRevision(), previousRevision)
 		cm.sendConfigUpdateNotification()
 	}
 }
@@ -280,7 +280,7 @@ func (cm *PollingProjectConfigManager) OnProjectConfigUpdate(callback func(notif
 		if projectConfigUpdateNotification, ok := payload.(notification.ProjectConfigUpdateNotification); ok {
 			callback(projectConfigUpdateNotification)
 		} else {
-			cm.logger.Warning(fmt.Sprintf("Unable to convert notification payload %v into ProjectConfigUpdateNotification", payload))
+			cm.logger.Warningf("Unable to convert notification payload %v into ProjectConfigUpdateNotification", payload)
 		}
 	}
 	id, err := cm.notificationCenter.AddHandler(notification.ProjectConfigUpdate, handler)

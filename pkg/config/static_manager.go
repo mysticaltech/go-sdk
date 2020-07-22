@@ -78,7 +78,7 @@ func NewStaticProjectConfigManagerFromURL(sdkKey string) (*StaticProjectConfigMa
 	url := fmt.Sprintf(DatafileURLTemplate, sdkKey)
 	datafile, _, code, e := requester.Get(url)
 	if e != nil {
-		logger.Error(fmt.Sprintf("request returned with http code=%d", code), e)
+		logger.Errorf("request returned with http code=%d", e, code)
 		return nil, e
 	}
 

@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -18,7 +18,6 @@
 package event
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -60,7 +59,7 @@ func (ed *httpEventDispatcher) DispatchEvent(event LogEvent) (bool, error) {
 		if code == http.StatusNoContent {
 			success = true
 		} else {
-			ed.logger.Error(fmt.Sprintf("http.Post invalid response %d", code), nil)
+			ed.logger.Errorf("http.Post invalid response %d", nil, code)
 			success = false
 		}
 	}
@@ -114,7 +113,7 @@ func (ed *QueueEventDispatcher) flushEvents() {
 	for ; queueSize > 0; queueSize = ed.eventQueue.Size() {
 		ed.queueSizeGauge.Set(float64(queueSize))
 		if retryCount > maxRetries {
-			ed.logger.Error(fmt.Sprintf("event failed to send %d times. It will retry on next event sent", maxRetries), nil)
+			ed.logger.Errorf("event failed to send %d times. It will retry on next event sent", nil, maxRetries)
 			ed.failFlushCounter.Add(1)
 			break
 		}

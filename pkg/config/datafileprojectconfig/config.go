@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -182,7 +182,7 @@ func NewDatafileProjectConfig(jsonDatafile []byte, logger logging.OptimizelyLogP
 
 	if _, ok := datafileVersions[datafile.Version]; !ok {
 		err = errors.New("unsupported datafile version")
-		logger.Error(fmt.Sprintf("Version %s of datafile not supported", datafile.Version), err)
+		logger.Errorf("Version %s of datafile not supported", err, datafile.Version)
 		return nil, err
 	}
 

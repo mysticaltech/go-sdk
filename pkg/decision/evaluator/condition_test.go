@@ -17,7 +17,6 @@
 package evaluator
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/optimizely/go-sdk/pkg/entities"
@@ -109,7 +108,7 @@ func (s *ConditionTestSuite) TestCustomAttributeConditionEvaluatorWithInvalidMat
 	}
 
 	condTreeParams := entities.NewTreeParameters(&user, map[string]entities.Audience{})
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.UnknownMatchType.String(), ""))
+	s.mockLogger.On("Warningf", logging.UnknownMatchType.String(), []interface{}{""})
 	result, _ := s.conditionEvaluator.Evaluate(condition, condTreeParams)
 	s.Equal(result, false)
 	s.mockLogger.AssertExpectations(s.T())
@@ -130,7 +129,7 @@ func (s *ConditionTestSuite) TestCustomAttributeConditionEvaluatorWithUnknownTyp
 	}
 
 	condTreeParams := entities.NewTreeParameters(&user, map[string]entities.Audience{})
-	s.mockLogger.On("Warning", fmt.Sprintf(logging.UnknownConditionType.String(), ""))
+	s.mockLogger.On("Warningf", logging.UnknownConditionType.String(), []interface{}{""})
 	result, _ := s.conditionEvaluator.Evaluate(condition, condTreeParams)
 	s.Equal(result, false)
 	s.mockLogger.AssertExpectations(s.T())

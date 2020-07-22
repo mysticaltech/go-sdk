@@ -17,7 +17,6 @@
 package decision
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/optimizely/go-sdk/pkg/decision/reasons"
@@ -45,6 +44,10 @@ func (m *MockLogger) Debug(message string) {
 	m.Called(message)
 }
 
+func (m *MockLogger) Debugf(message string, args ...interface{}) {
+	m.Called(message, args)
+}
+
 func (m *MockLogger) Info(message string) {
 	m.Called(message)
 }
@@ -57,7 +60,15 @@ func (m *MockLogger) Warning(message string) {
 	m.Called(message)
 }
 
+func (m *MockLogger) Warningf(message string, args ...interface{}) {
+	m.Called(message, args)
+}
+
 func (m *MockLogger) Error(message string, err interface{}) {
+	m.Called(message, err)
+}
+
+func (m *MockLogger) Errorf(message string, err interface{}, args ...interface{}) {
 	m.Called(message, err)
 }
 
@@ -123,7 +134,7 @@ func (s *ExperimentBucketerTestSuite) TestGetDecisionWithTargetingPasses() {
 		bucketer:              s.mockBucketer,
 	}
 	s.mockConfig.On("GetAudienceMap").Return(map[string]entities.Audience{})
-	s.mockLogger.On("Debug", fmt.Sprintf(logging.EvaluatingAudiencesForExperiment.String(), "test_targeted_experiment_1116"))
+	s.mockLogger.On("Debugf", logging.EvaluatingAudiencesForExperiment.String(), []interface{}{"test_targeted_experiment_1116"})
 	s.mockLogger.On("Infof", logging.ExperimentAudiencesEvaluatedTo.String(), []interface{}{"test_targeted_experiment_1116", true})
 
 	testDecisionContext := ExperimentDecisionContext{
@@ -154,7 +165,7 @@ func (s *ExperimentBucketerTestSuite) TestGetDecisionWithTargetingFails() {
 		bucketer:              s.mockBucketer,
 	}
 	s.mockConfig.On("GetAudienceMap").Return(map[string]entities.Audience{})
-	s.mockLogger.On("Debug", fmt.Sprintf(logging.EvaluatingAudiencesForExperiment.String(), "test_targeted_experiment_1116"))
+	s.mockLogger.On("Debugf", logging.EvaluatingAudiencesForExperiment.String(), []interface{}{"test_targeted_experiment_1116"})
 	s.mockLogger.On("Infof", logging.ExperimentAudiencesEvaluatedTo.String(), []interface{}{"test_targeted_experiment_1116", false})
 	s.mockLogger.On("Infof", logging.UserNotInExperiment.String(), []interface{}{"test_user_1", "test_targeted_experiment_1116"})
 

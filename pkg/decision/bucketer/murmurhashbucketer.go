@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -18,7 +18,6 @@
 package bucketer
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/optimizely/go-sdk/pkg/entities"
@@ -49,7 +48,7 @@ type MurmurhashBucketer struct {
 func NewMurmurhashBucketer(logger logging.OptimizelyLogProducer, hashSeed uint32) *MurmurhashBucketer {
 	return &MurmurhashBucketer{
 		hashSeed: hashSeed,
-		logger: logger,
+		logger:   logger,
 	}
 }
 
@@ -57,7 +56,7 @@ func NewMurmurhashBucketer(logger logging.OptimizelyLogProducer, hashSeed uint32
 func (b MurmurhashBucketer) Generate(bucketingKey string) int {
 	hasher := murmur3.SeedNew32(b.hashSeed)
 	if _, err := hasher.Write([]byte(bucketingKey)); err != nil {
-		b.logger.Error(fmt.Sprintf("Unable to generate a hash for the bucketing key=%s", bucketingKey), err)
+		b.logger.Errorf("Unable to generate a hash for the bucketing key=%s", err, bucketingKey)
 	}
 	hashCode := hasher.Sum32()
 	ratio := float32(hashCode) / maxHashValue

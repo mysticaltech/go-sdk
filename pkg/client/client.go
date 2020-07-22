@@ -415,7 +415,7 @@ func (o *OptimizelyClient) GetAllFeatureVariablesWithDecision(featureKey string,
 
 	feature := decisionContext.Feature
 	if feature == nil {
-		o.logger.Warning(fmt.Sprintf(`feature "%s" does not exist`, featureKey))
+		o.logger.Warningf(`feature "%s" does not exist`, featureKey)
 		return enabled, variableMap, nil
 	}
 
@@ -477,7 +477,7 @@ func (o *OptimizelyClient) GetDetailedFeatureDecisionUnsafe(featureKey string, u
 
 	feature := decisionContext.Feature
 	if feature == nil {
-		o.logger.Warning(fmt.Sprintf(`feature "%s" does not exist`, featureKey))
+		o.logger.Warningf(`feature "%s" does not exist`, featureKey)
 		return decisionInfo, nil
 	}
 
@@ -490,7 +490,7 @@ func (o *OptimizelyClient) GetDetailedFeatureDecisionUnsafe(featureKey string, u
 			if variable, ok := featureDecision.Variation.Variables[v.ID]; ok {
 				val = variable.Value
 			} else {
-				o.logger.Warning(fmt.Sprintf(`variable with id "%s" does not exist`, v.ID))
+				o.logger.Warningf(`variable with id "%s" does not exist`, v.ID)
 			}
 		}
 
@@ -505,7 +505,7 @@ func (o *OptimizelyClient) GetDetailedFeatureDecisionUnsafe(featureKey string, u
 		decisionNotification.Type = notification.AllFeatureVariables
 
 		if err = o.notificationCenter.Send(notification.Decision, *decisionNotification); err != nil {
-			o.logger.Warning(fmt.Sprintf("Problem with sending notification: %v", err))
+			o.logger.Warningf("Problem with sending notification: %v", err)
 		}
 	}
 	return decisionInfo, errs.ErrorOrNil()
@@ -616,7 +616,7 @@ func (o *OptimizelyClient) getFeatureDecision(featureKey, variableKey string, us
 	}()
 
 	userID := userContext.ID
-	o.logger.Debug(fmt.Sprintf(`Evaluating feature "%s" for user "%s".`, featureKey, userID))
+	o.logger.Debugf(`Evaluating feature "%s" for user "%s".`, featureKey, userID)
 
 	projectConfig, e := o.getProjectConfig()
 	if e != nil {
@@ -626,7 +626,7 @@ func (o *OptimizelyClient) getFeatureDecision(featureKey, variableKey string, us
 
 	feature, e := projectConfig.GetFeatureByKey(featureKey)
 	if e != nil {
-		o.logger.Warning(fmt.Sprintf(`Could not get feature for key "%s": %s`, featureKey, e))
+		o.logger.Warningf(`Could not get feature for key "%s": %s`, featureKey, e)
 		return decisionContext, featureDecision, nil
 	}
 
@@ -634,7 +634,7 @@ func (o *OptimizelyClient) getFeatureDecision(featureKey, variableKey string, us
 	if variableKey != "" {
 		variable, err = projectConfig.GetVariableByKey(feature.Key, variableKey)
 		if err != nil {
-			o.logger.Warning(fmt.Sprintf(`Could not get variable for key "%s": %s`, variableKey, err))
+			o.logger.Warningf(`Could not get variable for key "%s": %s`, variableKey, err)
 			return decisionContext, featureDecision, nil
 		}
 	}
@@ -647,7 +647,7 @@ func (o *OptimizelyClient) getFeatureDecision(featureKey, variableKey string, us
 
 	featureDecision, err = o.DecisionService.GetFeatureDecision(decisionContext, userContext)
 	if err != nil {
-		o.logger.Warning(fmt.Sprintf(`Received error while making a decision for feature "%s": %s`, featureKey, err))
+		o.logger.Warningf(`Received error while making a decision for feature "%s": %s`, featureKey, err)
 		return decisionContext, featureDecision, nil
 	}
 
@@ -657,7 +657,7 @@ func (o *OptimizelyClient) getFeatureDecision(featureKey, variableKey string, us
 func (o *OptimizelyClient) getExperimentDecision(experimentKey string, userContext entities.UserContext) (decisionContext decision.ExperimentDecisionContext, experimentDecision decision.ExperimentDecision, err error) {
 
 	userID := userContext.ID
-	o.logger.Debug(fmt.Sprintf(`Evaluating experiment "%s" for user "%s".`, experimentKey, userID))
+	o.logger.Debugf(`Evaluating experiment "%s" for user "%s".`, experimentKey, userID)
 
 	projectConfig, e := o.getProjectConfig()
 	if e != nil {
@@ -666,7 +666,7 @@ func (o *OptimizelyClient) getExperimentDecision(experimentKey string, userConte
 
 	experiment, e := projectConfig.GetExperimentByKey(experimentKey)
 	if e != nil {
-		o.logger.Warning(fmt.Sprintf(`Could not get experiment for key "%s": %s`, experimentKey, e))
+		o.logger.Warningf(`Could not get experiment for key "%s": %s`, experimentKey, e)
 		return decisionContext, experimentDecision, nil
 	}
 
@@ -677,7 +677,7 @@ func (o *OptimizelyClient) getExperimentDecision(experimentKey string, userConte
 
 	experimentDecision, err = o.DecisionService.GetExperimentDecision(decisionContext, userContext)
 	if err != nil {
-		o.logger.Warning(fmt.Sprintf(`Received error while making a decision for experiment "%s": %s`, experimentKey, err))
+		o.logger.Warningf(`Received error while making a decision for experiment "%s": %s`, experimentKey, err)
 		return decisionContext, experimentDecision, nil
 	}
 
@@ -706,7 +706,7 @@ func (o *OptimizelyClient) OnTrack(callback func(eventKey string, userContext en
 			}
 		}
 		if !success {
-			o.logger.Warning(fmt.Sprintf("Unable to convert notification payload %v into TrackNotification", payload))
+			o.logger.Warningf("Unable to convert notification payload %v into TrackNotification", payload)
 		}
 	}
 	id, err := o.notificationCenter.AddHandler(notification.Track, handler)
@@ -744,7 +744,7 @@ func (o *OptimizelyClient) getTypedValue(value string, variableType entities.Var
 		convertedValue = optlyJSON.ToMap()
 	case entities.String:
 	default:
-		o.logger.Warning(fmt.Sprintf(`type "%s" is unknown, returning string`, variableType))
+		o.logger.Warningf(`type "%s" is unknown, returning string`, variableType)
 	}
 	return convertedValue, err
 }

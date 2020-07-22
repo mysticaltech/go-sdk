@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -121,6 +121,11 @@ func (p NamedLogProducer) Debug(message string) {
 	p.log(LogLevelDebug, message)
 }
 
+// Debugf formats the given message with arguments and logs with a DEBUG level
+func (p NamedLogProducer) Debugf(message string, args ...interface{}) {
+	p.logf(LogLevelDebug, message, args...)
+}
+
 // Info logs the given message with a INFO level
 func (p NamedLogProducer) Info(message string) {
 	p.log(LogLevelInfo, message)
@@ -128,12 +133,17 @@ func (p NamedLogProducer) Info(message string) {
 
 // Infof formats the given message with arguments and logs with a INFO level
 func (p NamedLogProducer) Infof(message string, args ...interface{}) {
-	p.log(LogLevelInfo, fmt.Sprintf(message, args...))
+	p.logf(LogLevelInfo, message, args...)
 }
 
 // Warning logs the given message with a WARNING level
 func (p NamedLogProducer) Warning(message string) {
 	p.log(LogLevelWarning, message)
+}
+
+// Warningf formats the given message with arguments and logs with a WARNING level
+func (p NamedLogProducer) Warningf(message string, args ...interface{}) {
+	p.logf(LogLevelWarning, message, args...)
 }
 
 // Error logs the given message with a ERROR level
@@ -144,8 +154,24 @@ func (p NamedLogProducer) Error(message string, err interface{}) {
 	p.log(LogLevelError, message)
 }
 
+// Errorf formats the given message with arguments and logs with a ERROR level
+func (p NamedLogProducer) Errorf(message string, err interface{}, args ...interface{}) {
+	message = fmt.Sprintf(message, args...)
+	if err != nil {
+		message = message + ": %v"
+		args = append(args, err)
+	}
+	p.logf(LogLevelError, message, args...)
+}
+
 func (p NamedLogProducer) log(logLevel LogLevel, message string) {
 	mutex.Lock()
 	defaultLogConsumer.Log(logLevel, message, p.fields)
+	mutex.Unlock()
+}
+
+func (p NamedLogProducer) logf(logLevel LogLevel, message string, args ...interface{}) {
+	mutex.Lock()
+	defaultLogConsumer.Logf(logLevel, message, p.fields, args...)
 	mutex.Unlock()
 }

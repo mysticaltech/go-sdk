@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -19,7 +19,6 @@ package decision
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/optimizely/go-sdk/pkg/decision/reasons"
@@ -84,7 +83,7 @@ type ExperimentOverrideService struct {
 // NewExperimentOverrideService returns a pointer to an initialized ExperimentOverrideService
 func NewExperimentOverrideService(overrides ExperimentOverrideStore, logger logging.OptimizelyLogProducer) *ExperimentOverrideService {
 	return &ExperimentOverrideService{
-		logger: logger,
+		logger:    logger,
 		Overrides: overrides,
 	}
 }
@@ -107,7 +106,7 @@ func (s ExperimentOverrideService) GetDecision(decisionContext ExperimentDecisio
 		if variation, ok := decisionContext.Experiment.Variations[variationID]; ok {
 			decision.Variation = &variation
 			decision.Reason = reasons.OverrideVariationAssignmentFound
-			s.logger.Debug(fmt.Sprintf("Override variation %v found for user %v", variationKey, userContext.ID))
+			s.logger.Debugf("Override variation %v found for user %v", variationKey, userContext.ID)
 			return decision, nil
 		}
 	}
