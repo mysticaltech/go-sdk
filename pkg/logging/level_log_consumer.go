@@ -33,17 +33,17 @@ type FilteredLevelLogConsumer struct {
 
 // Log logs the message if it's log level is higher than or equal to the logger's set level
 func (l *FilteredLevelLogConsumer) Log(level LogLevel, message string, fields map[string]interface{}) {
-	if l.level <= level {
-		l.logger.Println(buildLogMessage(level, message, fields))
-	}
+	// if l.level <= level {
+	// 	l.logger.Println(buildLogMessage(level, message, fields))
+	// }
 }
 
 // Logf logs the message if it's log level is higher than or equal to the logger's set level
 func (l *FilteredLevelLogConsumer) Logf(level LogLevel, message string, fields map[string]interface{}, args ...interface{}) {
-	if l.level <= level {
-		message = fmt.Sprintf(message, args...)
-		l.logger.Println(buildLogMessage(level, message, fields))
-	}
+	// if l.level <= level {
+	// 	message = fmt.Sprintf(message, args...)
+	// 	l.logger.Println(buildLogMessage(level, message, fields))
+	// }
 }
 
 func buildLogMessage(level LogLevel, message string, fields map[string]interface{}) string {
