@@ -49,8 +49,6 @@ func (l *FilteredLevelLogConsumer) SetLogLevel(level LogLevel) {
 
 // NewFilteredLevelLogConsumer returns a new logger that logs to stdout
 func NewFilteredLevelLogConsumer(level LogLevel, out io.Writer) *FilteredLevelLogConsumer {
-	zerolog.SetGlobalLevel(levelMap[level])
-
 	logger := log.Logger.Level(levelMap[level])
 	return &FilteredLevelLogConsumer{
 		logger: &logger,
