@@ -66,9 +66,7 @@ func SetLogger(logger OptimizelyLogConsumer) {
 
 // SetLogLevel sets the log level to the given level
 func SetLogLevel(logLevel LogLevel) {
-	mutex.Lock()
 	defaultLogConsumer.SetLogLevel(logLevel)
-	mutex.Unlock()
 }
 
 // GetLogger returns a log producer with the given name
@@ -140,7 +138,5 @@ func (p NamedLogProducer) Error(message string, err interface{}) {
 }
 
 func (p NamedLogProducer) log(logLevel LogLevel, message string) {
-	mutex.Lock()
 	defaultLogConsumer.Log(logLevel, message, p.fields)
-	mutex.Unlock()
 }
