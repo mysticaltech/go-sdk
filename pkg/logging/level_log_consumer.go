@@ -18,53 +18,41 @@
 package logging
 
 import (
-	"fmt"
 	"io"
-	"log"
-	"sort"
-	"strings"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
+
+var levelMap = map[LogLevel]zerolog.Level{
+	LogLevelDebug:   zerolog.DebugLevel,
+	LogLevelInfo:    zerolog.InfoLevel,
+	LogLevelWarning: zerolog.WarnLevel,
+	LogLevelError:   zerolog.ErrorLevel,
+}
 
 // FilteredLevelLogConsumer is an implementation of the OptimizelyLogConsumer that filters by log level
 type FilteredLevelLogConsumer struct {
-	level  LogLevel
-	logger *log.Logger
+	logger *zerolog.Logger
 }
 
 // Log logs the message if it's log level is higher than or equal to the logger's set level
 func (l *FilteredLevelLogConsumer) Log(level LogLevel, message string, fields map[string]interface{}) {
-	if l.level <= level {
-		// prepends the name and log level to the message
-		messBuilder := strings.Builder{}
-
-		fmt.Fprintf(&messBuilder, "[%s]", level.String())
-
-		keys := make([]string, len(fields))
-		for k := range fields {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-
-		for _, k := range keys {
-			if s, ok := fields[k].(string);ok && s != "" {
-				fmt.Fprintf(&messBuilder, "[%s]", s)
-			}
-		}
-		fmt.Fprintf(&messBuilder, " %s", message)
-
-		l.logger.Println(messBuilder.String())
-	}
+	l.logger.WithLevel(levelMap[level]).Fields(fields).Msg("[Optimizely] " + message)
 }
 
 // SetLogLevel changes the log level to the given level
 func (l *FilteredLevelLogConsumer) SetLogLevel(level LogLevel) {
-	l.level = level
+	childLogger := l.logger.Level(levelMap[level])
+	l.logger = &childLogger
 }
 
 // NewFilteredLevelLogConsumer returns a new logger that logs to stdout
 func NewFilteredLevelLogConsumer(level LogLevel, out io.Writer) *FilteredLevelLogConsumer {
+	zerolog.SetGlobalLevel(levelMap[level])
+
+	logger := log.Logger.Level(levelMap[level])
 	return &FilteredLevelLogConsumer{
-		level:  level,
-		logger: log.New(out, "[Optimizely]", log.LstdFlags),
+		logger: &logger,
 	}
 }
