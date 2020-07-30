@@ -20,6 +20,11 @@ package reasons
 // Reason is the reason for which a decision was made
 type Reason string
 
+// ToString converts and returns reason as string
+func (r Reason) ToString() string {
+	return string(r)
+}
+
 const (
 	// BucketedVariationNotFound - the bucketed variation ID is not in the config
 	BucketedVariationNotFound Reason = "Bucketed variation not found"
@@ -55,4 +60,8 @@ const (
 	InvalidOverrideVariationAssignment Reason = "Invalid override variation assignment"
 	// OverrideVariationAssignmentFound - A valid override variation was found for the given user and experiment
 	OverrideVariationAssignmentFound Reason = "Override variation assignment found"
+	// SDKNotReadyYet - SDK is not ready
+	SDKNotReadyYet Reason = "Optimizely SDK not configured properly yet"
+	// FeatureKeyInvalid - feature with key not found
+	FeatureKeyInvalid Reason = `feature with key "%s" not found`
 )

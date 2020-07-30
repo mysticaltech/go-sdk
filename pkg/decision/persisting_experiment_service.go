@@ -30,13 +30,13 @@ import (
 type PersistingExperimentService struct {
 	experimentBucketedService ExperimentService
 	userProfileService        UserProfileService
-	logger 					  logging.OptimizelyLogProducer
+	logger                    logging.OptimizelyLogProducer
 }
 
 // NewPersistingExperimentService returns a new instance of the PersistingExperimentService
 func NewPersistingExperimentService(userProfileService UserProfileService, experimentBucketerService ExperimentService, logger logging.OptimizelyLogProducer) *PersistingExperimentService {
 	persistingExperimentService := &PersistingExperimentService{
-		logger: logger,
+		logger:                    logger,
 		experimentBucketedService: experimentBucketerService,
 		userProfileService:        userProfileService,
 	}
@@ -48,6 +48,12 @@ func NewPersistingExperimentService(userProfileService UserProfileService, exper
 func (p PersistingExperimentService) GetDecision(decisionContext ExperimentDecisionContext, userContext entities.UserContext) (experimentDecision ExperimentDecision, err error) {
 	if p.userProfileService == nil {
 		return p.experimentBucketedService.GetDecision(decisionContext, userContext)
+	}
+
+	for _, opt := range decisionContext.Options {
+		if opt == entities.BypassUPS { // by passing ups
+			return p.experimentBucketedService.GetDecision(decisionContext, userContext)
+		}
 	}
 
 	var userProfile UserProfile
@@ -68,8 +74,15 @@ func (p PersistingExperimentService) GetDecision(decisionContext ExperimentDecis
 }
 
 func (p PersistingExperimentService) getSavedDecision(decisionContext ExperimentDecisionContext, userContext entities.UserContext) (ExperimentDecision, UserProfile) {
+
 	experimentDecision := ExperimentDecision{}
 	userProfile := p.userProfileService.Lookup(userContext.ID)
+
+	for _, opt := range decisionContext.Options {
+		if opt == entities.BypassUPS { // by passing ups
+			return experimentDecision, userProfile
+		}
+	}
 
 	// look up experiment decision from user profile
 	decisionKey := NewUserDecisionKey(decisionContext.Experiment.ID)

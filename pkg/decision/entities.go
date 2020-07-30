@@ -48,6 +48,7 @@ func ErrorDecision(key string, user entities.UserContext, reason reasons.Reason)
 type ExperimentDecisionContext struct {
 	Experiment    *entities.Experiment
 	ProjectConfig config.ProjectConfig
+	Options       []entities.OptimizelyDecideOption
 }
 
 // FeatureDecisionContext contains the information needed to be able to make a decision for a given feature
@@ -55,6 +56,7 @@ type FeatureDecisionContext struct {
 	Feature       *entities.Feature
 	ProjectConfig config.ProjectConfig
 	Variable      entities.Variable
+	Options       []entities.OptimizelyDecideOption
 }
 
 // UnsafeFeatureDecisionInfo represents response for GetDetailedFeatureDecisionUnsafe api

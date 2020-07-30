@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/optimizely/go-sdk/pkg/decision/reasons"
+
 	"github.com/optimizely/go-sdk/pkg/config"
 	"github.com/optimizely/go-sdk/pkg/decision"
 	"github.com/optimizely/go-sdk/pkg/entities"
@@ -79,6 +81,107 @@ func (o *OptimizelyClient) SetUserContext(user *entities.UserContext) (err error
 	o.userContext = user
 
 	return nil
+}
+
+// Decide returns a decision result for a given flag/experiment key value and a user context
+func (o *OptimizelyClient) Decide(key string, userContext entities.UserContext, options []entities.OptimizelyDecideOption) decision.OptimizelyDecision {
+	var err error
+	defer func() {
+		if r := recover(); r != nil {
+			switch t := r.(type) {
+			case error:
+				err = t
+			case string:
+				err = errors.New(t)
+			default:
+				err = errors.New("unexpected error")
+			}
+			errorMessage := fmt.Sprintf("SetUserContext call, optimizely SDK is panicking with the error:")
+			o.logger.Error(errorMessage, err)
+			o.logger.Debug(string(debug.Stack()))
+		}
+	}()
+
+	var config config.ProjectConfig
+	if config, err = o.getProjectConfig(); err != nil {
+		return decision.ErrorDecision(key, userContext, reasons.SDKNotReadyYet)
+	}
+
+	allOptions := o.getAllOptions(options)
+	var isFeatureKey bool
+	var isExperimentKey bool
+	if _, err = config.GetFeatureByKey(key); err == nil {
+		isFeatureKey = true
+	}
+	if _, err = config.GetExperimentByKey(key); err == nil {
+		isExperimentKey = true
+	}
+
+	for _, opt := range allOptions {
+		if opt == entities.ForExperiment {
+			isFeatureKey = false
+			isExperimentKey = true
+			break
+		}
+	}
+
+	if isExperimentKey && !isFeatureKey {
+		return decision.ErrorDecision(key, userContext, reasons.SDKNotReadyYet)
+	}
+	return decision.ErrorDecision(key, userContext, reasons.SDKNotReadyYet)
+}
+
+func (o *OptimizelyClient) decide(config config.ProjectConfig, key string, userContext entities.UserContext, options []entities.OptimizelyDecideOption) decision.OptimizelyDecision {
+
+	userID := userContext.ID
+	attributes := userContext.Attributes
+	reasons := decision.Reasons{}
+	var tracked bool
+	var enabled bool
+	var decisionFromFeatureTest bool
+}
+
+func (o *OptimizelyClient) getDecisionVariableMap(key string, userContext entities.UserContext, enabled bool, decisionReasons *decision.Reasons) map[string]interface{} {
+	variableMap := make(map[string]interface{})
+	decisionContext, featureDecision, err := o.getFeatureDecision(key, "", userContext)
+	if err != nil {
+		o.logger.Error("Optimizely SDK tracking error", err)
+		decisionReasons.AddError(reasons.Reason(err.Error()))
+		return variableMap
+	}
+
+	if featureDecision.Variation != nil {
+		enabled = featureDecision.Variation.FeatureEnabled
+	}
+
+	feature := decisionContext.Feature
+	if feature == nil {
+		o.logger.Warning(fmt.Sprintf(`feature "%s" does not exist`, featureKey))
+		return enabled, variableMap, nil
+	}
+
+	errs := new(multierror.Error)
+
+	for _, v := range feature.VariableMap {
+		val := v.DefaultValue
+
+		if enabled {
+			if variable, ok := featureDecision.Variation.Variables[v.ID]; ok {
+				val = variable.Value
+			}
+		}
+
+		typedValue, typedError := o.getTypedValue(val, v.Type)
+		errs = multierror.Append(errs, typedError)
+		variableMap[v.Key] = typedValue
+	}
+}
+
+func (o *OptimizelyClient) getAllOptions(options []entities.OptimizelyDecideOption) []entities.OptimizelyDecideOption {
+	if o.userContext != nil {
+		return append(o.userContext.DefaultDecideOptions, options...)
+	}
+	return options
 }
 
 // Activate returns the key of the variation the user is bucketed into and queues up an impression event to be sent to
