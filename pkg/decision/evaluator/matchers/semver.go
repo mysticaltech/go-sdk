@@ -164,7 +164,7 @@ func (sv SemanticVersion) getValidTargetSuffix(separator, str string) (string, e
 		if !sv.isValidPreReleaseOrBuild(metaData[1:]) {
 			return "", errors.New(string(reasons.AttributeFormatInvalid))
 		}
-		return strings.ReplaceAll(str, metaData, ""), nil
+		return strings.Replace(str, metaData, "", -1), nil
 	}
 	return str, nil
 }
