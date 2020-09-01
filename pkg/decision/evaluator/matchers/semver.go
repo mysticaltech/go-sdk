@@ -118,19 +118,10 @@ func (sv SemanticVersion) splitSemanticVersion(targetedVersion string) ([]string
 			return []string{}, errors.New(string(reasons.AttributeFormatInvalid))
 		}
 		// dont compare build meta-data
-		if sep == buildSeperator {
-			// build must only comprise only ASCII alphanumerics and hyphens
-			if !sv.isValidPreReleaseOrBuild(targetSuffix) {
-				return []string{}, errors.New(string(reasons.AttributeFormatInvalid))
-			}
-			targetSuffix = ""
-		} else if index = strings.Index(targetSuffix, buildSeperator); index != -1 {
-			metaData := targetSuffix[index:]
-			// build must only comprise only ASCII alphanumerics and hyphens
-			if !sv.isValidPreReleaseOrBuild(metaData[1:]) {
-				return []string{}, errors.New(string(reasons.AttributeFormatInvalid))
-			}
-			targetSuffix = strings.ReplaceAll(targetSuffix, metaData, "")
+		if tSuffix, err := sv.getValidTargetSuffix(sep, targetSuffix); err == nil {
+			targetSuffix = tSuffix
+		} else {
+			return []string{}, err
 		}
 	}
 
@@ -158,6 +149,24 @@ func (sv SemanticVersion) splitSemanticVersion(targetedVersion string) ([]string
 		targetedVersionParts = append(targetedVersionParts, targetSuffix)
 	}
 	return targetedVersionParts, nil
+}
+
+func (sv SemanticVersion) getValidTargetSuffix(separator, str string) (string, error) {
+	if separator == buildSeperator {
+		// build must only comprise only ASCII alphanumerics and hyphens
+		if !sv.isValidPreReleaseOrBuild(str) {
+			return "", errors.New(string(reasons.AttributeFormatInvalid))
+		}
+		return "", nil
+	} else if index := strings.Index(str, buildSeperator); index != -1 {
+		metaData := str[index:]
+		// build must only comprise only ASCII alphanumerics and hyphens
+		if !sv.isValidPreReleaseOrBuild(metaData[1:]) {
+			return "", errors.New(string(reasons.AttributeFormatInvalid))
+		}
+		return strings.ReplaceAll(str, metaData, ""), nil
+	}
+	return str, nil
 }
 
 func (sv SemanticVersion) isNumber(str string) bool {
