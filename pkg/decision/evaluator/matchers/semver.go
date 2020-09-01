@@ -99,7 +99,7 @@ func (sv SemanticVersion) splitSemanticVersion(targetedVersion string) ([]string
 	var targetSuffix string
 
 	if sv.isPreReleaseOrBuild(targetedVersion) != 0 {
-		// More than one occurence of build separator not allowed
+		// More than one occurrence of build separator not allowed
 		if strings.Count(targetedVersion, buildSeperator) > 1 {
 			return []string{}, errors.New(string(reasons.AttributeFormatInvalid))
 		}
