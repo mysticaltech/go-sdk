@@ -143,11 +143,8 @@ func (sv SemanticVersion) splitSemanticVersion(targetedVersion string) ([]string
 	// split all dots with SplitAfter
 	targetedVersionParts := strings.Split(targetPrefix, ".")
 
-	if len(targetedVersionParts) > 3 {
-		return []string{}, errors.New(string(reasons.AttributeFormatInvalid))
-	}
-
-	if len(targetedVersionParts) == 0 {
+	targetVersionPartsCount := len(targetedVersionParts)
+	if targetVersionPartsCount > 3 || targetVersionPartsCount == 0 {
 		return []string{}, errors.New(string(reasons.AttributeFormatInvalid))
 	}
 
